@@ -1,5 +1,5 @@
 -- ============================================================
--- BASE DE DATOS: Sistema de Gestión Académica
+-- BASE DE DATOS: Sistema de Gestion Academica
 -- Motor: PostgreSQL
 -- ============================================================
 
@@ -7,14 +7,14 @@
 -- Si quieres crear la base desde cero, ejecuta esto separado:
 -- CREATE DATABASE academic_management_db;
 
--- Luego conéctate a la base academic_management_db y ejecuta el resto.
+-- Luego conectate a la base academic_management_db y ejecuta el resto.
 
--- Si estás en desarrollo y quieres reiniciar todo, puedes descomentar:
--- DROP SCHEMA IF EXISTS academic CASCADE;
+-- Si estas en desarrollo y quieres reiniciar todo, puedes descomentar:
+-- DROP SCHEMA IF EXISTS academico CASCADE;
 
-CREATE SCHEMA IF NOT EXISTS academic;
+CREATE SCHEMA IF NOT EXISTS academico;
 
-SET search_path TO academic, public;
+SET search_path TO academico, public;
 
 -- ============================================================
 -- EXTENSIONES
@@ -27,112 +27,112 @@ SET search_path TO academic, public;
 -- TIPOS ENUM
 -- ============================================================
 
-CREATE TYPE user_status AS ENUM (
-    'active',
-    'inactive',
-    'blocked'
+CREATE TYPE estado_usuario AS ENUM (
+    'activo',
+    'inactivo',
+    'bloqueado'
 );
 
-CREATE TYPE general_status AS ENUM (
-    'active',
-    'inactive',
-    'archived'
+CREATE TYPE estado_general AS ENUM (
+    'activo',
+    'inactivo',
+    'archivado'
 );
 
-CREATE TYPE academic_person_status AS ENUM (
-    'active',
-    'inactive',
-    'graduated',
-    'suspended',
-    'withdrawn'
+CREATE TYPE estado_persona_academica AS ENUM (
+    'activo',
+    'inactivo',
+    'graduado',
+    'suspendido',
+    'retirado'
 );
 
-CREATE TYPE period_status AS ENUM (
-    'planned',
-    'active',
-    'closed',
-    'archived'
+CREATE TYPE estado_periodo AS ENUM (
+    'planificado',
+    'activo',
+    'cerrado',
+    'archivado'
 );
 
-CREATE TYPE section_status AS ENUM (
-    'planned',
-    'open',
-    'closed',
-    'cancelled',
-    'completed'
+CREATE TYPE estado_paralelo AS ENUM (
+    'planificado',
+    'abierto',
+    'cerrado',
+    'cancelado',
+    'completado'
 );
 
-CREATE TYPE enrollment_status AS ENUM (
-    'draft',
-    'pending',
-    'approved',
-    'rejected',
-    'cancelled'
+CREATE TYPE estado_matricula AS ENUM (
+    'borrador',
+    'pendiente',
+    'aprobado',
+    'rechazado',
+    'cancelado'
 );
 
-CREATE TYPE enrollment_course_status AS ENUM (
-    'enrolled',
-    'withdrawn',
-    'completed',
-    'passed',
-    'failed'
+CREATE TYPE estado_asignatura_matricula AS ENUM (
+    'matriculado',
+    'retirado',
+    'completado',
+    'aprobado',
+    'reprobado'
 );
 
-CREATE TYPE request_type AS ENUM (
-    'enrollment_approval',
-    'withdrawal',
-    'section_change',
-    'grade_review',
-    'document_update',
-    'academic_certificate',
-    'other'
+CREATE TYPE tipo_solicitud AS ENUM (
+    'aprobacion_matricula',
+    'retiro',
+    'cambio_paralelo',
+    'revision_calificacion',
+    'actualizacion_documento',
+    'certificado_academico',
+    'otro'
 );
 
-CREATE TYPE request_status AS ENUM (
-    'pending',
-    'in_review',
-    'approved',
-    'rejected',
-    'cancelled'
+CREATE TYPE estado_solicitud AS ENUM (
+    'pendiente',
+    'en_revision',
+    'aprobado',
+    'rechazado',
+    'cancelado'
 );
 
-CREATE TYPE attendance_status AS ENUM (
-    'present',
-    'absent',
-    'late',
-    'excused'
+CREATE TYPE estado_asistencia AS ENUM (
+    'presente',
+    'ausente',
+    'atraso',
+    'justificado'
 );
 
-CREATE TYPE notification_status AS ENUM (
-    'unread',
-    'read'
+CREATE TYPE estado_notificacion AS ENUM (
+    'no_leido',
+    'leido'
 );
 
-CREATE TYPE document_status AS ENUM (
-    'pending',
-    'approved',
-    'rejected'
+CREATE TYPE estado_documento AS ENUM (
+    'pendiente',
+    'aprobado',
+    'rechazado'
 );
 
-CREATE TYPE course_modality AS ENUM (
-    'onsite',
+CREATE TYPE modalidad_asignatura AS ENUM (
+    'presencial',
     'virtual',
-    'hybrid'
+    'hibrida'
 );
 
-CREATE TYPE program_level AS ENUM (
-    'undergraduate',
-    'postgraduate'
+CREATE TYPE nivel_programa AS ENUM (
+    'pregrado',
+    'posgrado'
 );
 
 -- ============================================================
--- FUNCIÓN PARA updated_at
+-- FUNCION PARA actualizado_at
 -- ============================================================
 
-CREATE OR REPLACE FUNCTION academic.set_updated_at()
+CREATE OR REPLACE FUNCTION academico.establecer_actualizado_at()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = NOW();
+    NEW.actualizado_at = NOW();
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -141,297 +141,297 @@ $$ LANGUAGE plpgsql;
 -- USUARIOS, ROLES Y PERMISOS
 -- ============================================================
 
-CREATE TABLE users (
-    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    full_name VARCHAR(150) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    phone VARCHAR(30),
+CREATE TABLE usuarios (
+    usuario_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre_completo VARCHAR(150) NOT NULL,
+    correo_electronico VARCHAR(255) NOT NULL UNIQUE,
+    clave_hash VARCHAR(255) NOT NULL,
+    telefono VARCHAR(30),
     avatar_url TEXT,
-    status user_status NOT NULL DEFAULT 'active',
-    last_login_at TIMESTAMP,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    estado estado_usuario NOT NULL DEFAULT 'activo',
+    ultimo_ingreso_at TIMESTAMP,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE roles (
-    role_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(50) NOT NULL UNIQUE,
-    description TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    rol_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre VARCHAR(50) NOT NULL UNIQUE,
+    descripcion TEXT,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE permissions (
-    permission_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    code VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+CREATE TABLE permisos (
+    permiso_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    codigo VARCHAR(100) NOT NULL UNIQUE,
+    descripcion TEXT,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE user_roles (
-    user_id UUID NOT NULL,
-    role_id UUID NOT NULL,
-    assigned_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE usuario_roles (
+    usuario_id UUID NOT NULL,
+    rol_id UUID NOT NULL,
+    asignado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    PRIMARY KEY (user_id, role_id),
+    PRIMARY KEY (usuario_id, rol_id),
 
-    CONSTRAINT fk_user_roles_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
+    CONSTRAINT fk_usuario_roles_usuario
+        FOREIGN KEY (usuario_id)
+        REFERENCES usuarios(usuario_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_user_roles_role
-        FOREIGN KEY (role_id)
-        REFERENCES roles(role_id)
+    CONSTRAINT fk_usuario_roles_rol
+        FOREIGN KEY (rol_id)
+        REFERENCES roles(rol_id)
         ON DELETE CASCADE
 );
 
-CREATE TABLE role_permissions (
-    role_id UUID NOT NULL,
-    permission_id UUID NOT NULL,
-    assigned_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE rol_permisos (
+    rol_id UUID NOT NULL,
+    permiso_id UUID NOT NULL,
+    asignado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    PRIMARY KEY (role_id, permission_id),
+    PRIMARY KEY (rol_id, permiso_id),
 
-    CONSTRAINT fk_role_permissions_role
-        FOREIGN KEY (role_id)
-        REFERENCES roles(role_id)
+    CONSTRAINT fk_rol_permisos_rol
+        FOREIGN KEY (rol_id)
+        REFERENCES roles(rol_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_role_permissions_permission
-        FOREIGN KEY (permission_id)
-        REFERENCES permissions(permission_id)
+    CONSTRAINT fk_rol_permisos_permiso
+        FOREIGN KEY (permiso_id)
+        REFERENCES permisos(permiso_id)
         ON DELETE CASCADE
 );
 
 -- ============================================================
--- ESTRUCTURA ACADÉMICA
--- Facultades, carreras, mallas y cursos
+-- ESTRUCTURA ACADEMICA
+-- Facultades, carreras, mallas y asignaturas
 -- ============================================================
 
-CREATE TABLE faculties (
-    faculty_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    code VARCHAR(30) NOT NULL UNIQUE,
-    name VARCHAR(150) NOT NULL,
-    description TEXT,
-    status general_status NOT NULL DEFAULT 'active',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+CREATE TABLE facultades (
+    facultad_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    codigo VARCHAR(30) NOT NULL UNIQUE,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    estado estado_general NOT NULL DEFAULT 'activo',
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE programs (
-    program_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    faculty_id UUID NOT NULL,
-    code VARCHAR(30) NOT NULL UNIQUE,
-    name VARCHAR(150) NOT NULL,
-    degree_title VARCHAR(150),
-    duration_semesters INT NOT NULL,
-    academic_level program_level NOT NULL DEFAULT 'undergraduate',
-    status general_status NOT NULL DEFAULT 'active',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE carreras (
+    carrera_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    facultad_id UUID NOT NULL,
+    codigo VARCHAR(30) NOT NULL UNIQUE,
+    nombre VARCHAR(150) NOT NULL,
+    titulo_otorgado VARCHAR(150),
+    duracion_semestres INT NOT NULL,
+    nivel_academico nivel_programa NOT NULL DEFAULT 'pregrado',
+    estado estado_general NOT NULL DEFAULT 'activo',
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_programs_faculty
-        FOREIGN KEY (faculty_id)
-        REFERENCES faculties(faculty_id),
+    CONSTRAINT fk_carreras_facultad
+        FOREIGN KEY (facultad_id)
+        REFERENCES facultades(facultad_id),
 
-    CONSTRAINT chk_program_duration
-        CHECK (duration_semesters > 0)
+    CONSTRAINT chk_carrera_duracion
+        CHECK (duracion_semestres > 0)
 );
 
-CREATE TABLE curricula (
-    curriculum_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    program_id UUID NOT NULL,
+CREATE TABLE mallas_curriculares (
+    malla_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    carrera_id UUID NOT NULL,
     version VARCHAR(50) NOT NULL,
-    name VARCHAR(150) NOT NULL,
-    start_year INT,
-    status general_status NOT NULL DEFAULT 'active',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    nombre VARCHAR(150) NOT NULL,
+    anio_inicio INT,
+    estado estado_general NOT NULL DEFAULT 'activo',
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_curricula_program
-        FOREIGN KEY (program_id)
-        REFERENCES programs(program_id),
+    CONSTRAINT fk_mallas_carrera
+        FOREIGN KEY (carrera_id)
+        REFERENCES carreras(carrera_id),
 
-    CONSTRAINT uq_curriculum_program_version
-        UNIQUE (program_id, version)
+    CONSTRAINT uq_malla_carrera_version
+        UNIQUE (carrera_id, version)
 );
 
-CREATE TABLE courses (
-    course_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    code VARCHAR(30) NOT NULL UNIQUE,
-    name VARCHAR(150) NOT NULL,
-    description TEXT,
-    credits INT NOT NULL DEFAULT 0,
-    theory_hours INT NOT NULL DEFAULT 0,
-    practice_hours INT NOT NULL DEFAULT 0,
-    status general_status NOT NULL DEFAULT 'active',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE asignaturas (
+    asignatura_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    codigo VARCHAR(30) NOT NULL UNIQUE,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    creditos INT NOT NULL DEFAULT 0,
+    horas_teoria INT NOT NULL DEFAULT 0,
+    horas_practica INT NOT NULL DEFAULT 0,
+    estado estado_general NOT NULL DEFAULT 'activo',
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT chk_course_credits
-        CHECK (credits >= 0),
+    CONSTRAINT chk_asignatura_creditos
+        CHECK (creditos >= 0),
 
-    CONSTRAINT chk_course_hours
-        CHECK (theory_hours >= 0 AND practice_hours >= 0)
+    CONSTRAINT chk_asignatura_horas
+        CHECK (horas_teoria >= 0 AND horas_practica >= 0)
 );
 
-CREATE TABLE curriculum_courses (
-    curriculum_course_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    curriculum_id UUID NOT NULL,
-    course_id UUID NOT NULL,
-    semester_number INT NOT NULL,
-    is_required BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE malla_asignaturas (
+    malla_asignatura_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    malla_id UUID NOT NULL,
+    asignatura_id UUID NOT NULL,
+    numero_semestre INT NOT NULL,
+    es_obligatoria BOOLEAN NOT NULL DEFAULT TRUE,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_curriculum_courses_curriculum
-        FOREIGN KEY (curriculum_id)
-        REFERENCES curricula(curriculum_id)
+    CONSTRAINT fk_malla_asignaturas_malla
+        FOREIGN KEY (malla_id)
+        REFERENCES mallas_curriculares(malla_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_curriculum_courses_course
-        FOREIGN KEY (course_id)
-        REFERENCES courses(course_id),
+    CONSTRAINT fk_malla_asignaturas_asignatura
+        FOREIGN KEY (asignatura_id)
+        REFERENCES asignaturas(asignatura_id),
 
-    CONSTRAINT chk_curriculum_semester
-        CHECK (semester_number > 0),
+    CONSTRAINT chk_malla_semestre
+        CHECK (numero_semestre > 0),
 
-    CONSTRAINT uq_curriculum_course
-        UNIQUE (curriculum_id, course_id)
+    CONSTRAINT uq_malla_asignatura
+        UNIQUE (malla_id, asignatura_id)
 );
 
-CREATE TABLE course_prerequisites (
-    course_id UUID NOT NULL,
-    prerequisite_course_id UUID NOT NULL,
+CREATE TABLE prerrequisitos_asignaturas (
+    asignatura_id UUID NOT NULL,
+    asignatura_prerrequisito_id UUID NOT NULL,
 
-    PRIMARY KEY (course_id, prerequisite_course_id),
+    PRIMARY KEY (asignatura_id, asignatura_prerrequisito_id),
 
-    CONSTRAINT fk_course_prerequisites_course
-        FOREIGN KEY (course_id)
-        REFERENCES courses(course_id)
+    CONSTRAINT fk_prerrequisitos_asignatura
+        FOREIGN KEY (asignatura_id)
+        REFERENCES asignaturas(asignatura_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_course_prerequisites_prerequisite
-        FOREIGN KEY (prerequisite_course_id)
-        REFERENCES courses(course_id)
+    CONSTRAINT fk_prerrequisitos_prerrequisito
+        FOREIGN KEY (asignatura_prerrequisito_id)
+        REFERENCES asignaturas(asignatura_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT chk_no_self_prerequisite
-        CHECK (course_id <> prerequisite_course_id)
+    CONSTRAINT chk_no_auto_prerrequisito
+        CHECK (asignatura_id <> asignatura_prerrequisito_id)
 );
 
 -- ============================================================
--- PERSONAS ACADÉMICAS
+-- PERSONAS ACADEMICAS
 -- Estudiantes, docentes y personal administrativo
 -- ============================================================
 
-CREATE TABLE students (
-    student_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL UNIQUE,
-    program_id UUID NOT NULL,
-    curriculum_id UUID,
-    student_code VARCHAR(50) NOT NULL UNIQUE,
-    document_number VARCHAR(50) UNIQUE,
-    birth_date DATE,
-    address VARCHAR(255),
-    phone VARCHAR(30),
-    admission_date DATE,
-    current_semester INT DEFAULT 1,
-    status academic_person_status NOT NULL DEFAULT 'active',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE estudiantes (
+    estudiante_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id UUID NOT NULL UNIQUE,
+    carrera_id UUID NOT NULL,
+    malla_id UUID,
+    codigo_estudiante VARCHAR(50) NOT NULL UNIQUE,
+    numero_documento VARCHAR(50) UNIQUE,
+    fecha_nacimiento DATE,
+    direccion VARCHAR(255),
+    telefono VARCHAR(30),
+    fecha_admision DATE,
+    semestre_actual INT DEFAULT 1,
+    estado estado_persona_academica NOT NULL DEFAULT 'activo',
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_students_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
+    CONSTRAINT fk_estudiantes_usuario
+        FOREIGN KEY (usuario_id)
+        REFERENCES usuarios(usuario_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_students_program
-        FOREIGN KEY (program_id)
-        REFERENCES programs(program_id),
+    CONSTRAINT fk_estudiantes_carrera
+        FOREIGN KEY (carrera_id)
+        REFERENCES carreras(carrera_id),
 
-    CONSTRAINT fk_students_curriculum
-        FOREIGN KEY (curriculum_id)
-        REFERENCES curricula(curriculum_id),
+    CONSTRAINT fk_estudiantes_malla
+        FOREIGN KEY (malla_id)
+        REFERENCES mallas_curriculares(malla_id),
 
-    CONSTRAINT chk_student_semester
-        CHECK (current_semester IS NULL OR current_semester > 0)
+    CONSTRAINT chk_estudiante_semestre
+        CHECK (semestre_actual IS NULL OR semestre_actual > 0)
 );
 
-CREATE TABLE teachers (
-    teacher_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL UNIQUE,
-    faculty_id UUID,
-    teacher_code VARCHAR(50) NOT NULL UNIQUE,
-    document_number VARCHAR(50) UNIQUE,
-    specialty VARCHAR(150),
-    academic_degree VARCHAR(150),
-    hire_date DATE,
-    status general_status NOT NULL DEFAULT 'active',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE docentes (
+    docente_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id UUID NOT NULL UNIQUE,
+    facultad_id UUID,
+    codigo_docente VARCHAR(50) NOT NULL UNIQUE,
+    numero_documento VARCHAR(50) UNIQUE,
+    especialidad VARCHAR(150),
+    titulo_academico VARCHAR(150),
+    fecha_contratacion DATE,
+    estado estado_general NOT NULL DEFAULT 'activo',
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_teachers_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
+    CONSTRAINT fk_docentes_usuario
+        FOREIGN KEY (usuario_id)
+        REFERENCES usuarios(usuario_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_teachers_faculty
-        FOREIGN KEY (faculty_id)
-        REFERENCES faculties(faculty_id)
+    CONSTRAINT fk_docentes_facultad
+        FOREIGN KEY (facultad_id)
+        REFERENCES facultades(facultad_id)
 );
 
-CREATE TABLE administrative_staff (
-    staff_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL UNIQUE,
-    staff_code VARCHAR(50) NOT NULL UNIQUE,
-    department_name VARCHAR(150),
-    position VARCHAR(150),
-    status general_status NOT NULL DEFAULT 'active',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE personal_administrativo (
+    personal_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id UUID NOT NULL UNIQUE,
+    codigo_personal VARCHAR(50) NOT NULL UNIQUE,
+    nombre_departamento VARCHAR(150),
+    cargo VARCHAR(150),
+    estado estado_general NOT NULL DEFAULT 'activo',
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_staff_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
+    CONSTRAINT fk_personal_usuario
+        FOREIGN KEY (usuario_id)
+        REFERENCES usuarios(usuario_id)
         ON DELETE CASCADE
 );
 
 -- ============================================================
--- PERIODOS ACADÉMICOS
+-- PERIODOS ACADEMICOS
 -- ============================================================
 
-CREATE TABLE academic_periods (
-    academic_period_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    code VARCHAR(50) NOT NULL UNIQUE,
-    name VARCHAR(150) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    enrollment_start_date DATE,
-    enrollment_end_date DATE,
-    grading_start_date DATE,
-    grading_end_date DATE,
-    status period_status NOT NULL DEFAULT 'planned',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE periodos_academicos (
+    periodo_academico_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    codigo VARCHAR(50) NOT NULL UNIQUE,
+    nombre VARCHAR(150) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    fecha_inicio_matriculacion DATE,
+    fecha_fin_matriculacion DATE,
+    fecha_inicio_calificaciones DATE,
+    fecha_fin_calificaciones DATE,
+    estado estado_periodo NOT NULL DEFAULT 'planificado',
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT chk_period_dates
-        CHECK (start_date < end_date),
+    CONSTRAINT chk_periodo_fechas
+        CHECK (fecha_inicio < fecha_fin),
 
-    CONSTRAINT chk_enrollment_dates
+    CONSTRAINT chk_matriculacion_fechas
         CHECK (
-            enrollment_start_date IS NULL
-            OR enrollment_end_date IS NULL
-            OR enrollment_start_date <= enrollment_end_date
+            fecha_inicio_matriculacion IS NULL
+            OR fecha_fin_matriculacion IS NULL
+            OR fecha_inicio_matriculacion <= fecha_fin_matriculacion
         ),
 
-    CONSTRAINT chk_grading_dates
+    CONSTRAINT chk_calificaciones_fechas
         CHECK (
-            grading_start_date IS NULL
-            OR grading_end_date IS NULL
-            OR grading_start_date <= grading_end_date
+            fecha_inicio_calificaciones IS NULL
+            OR fecha_fin_calificaciones IS NULL
+            OR fecha_inicio_calificaciones <= fecha_fin_calificaciones
         )
 );
 
@@ -439,364 +439,364 @@ CREATE TABLE academic_periods (
 -- AULAS, PARALELOS Y HORARIOS
 -- ============================================================
 
-CREATE TABLE classrooms (
-    classroom_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    code VARCHAR(50) NOT NULL UNIQUE,
-    name VARCHAR(100),
-    capacity INT NOT NULL DEFAULT 0,
-    location VARCHAR(150),
-    status general_status NOT NULL DEFAULT 'active',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE aulas (
+    aula_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    codigo VARCHAR(50) NOT NULL UNIQUE,
+    nombre VARCHAR(100),
+    capacidad INT NOT NULL DEFAULT 0,
+    ubicacion VARCHAR(150),
+    estado estado_general NOT NULL DEFAULT 'activo',
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT chk_classroom_capacity
-        CHECK (capacity >= 0)
+    CONSTRAINT chk_aula_capacidad
+        CHECK (capacidad >= 0)
 );
 
-CREATE TABLE course_sections (
-    course_section_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    course_id UUID NOT NULL,
-    academic_period_id UUID NOT NULL,
-    teacher_id UUID,
-    section_code VARCHAR(30) NOT NULL,
-    modality course_modality NOT NULL DEFAULT 'onsite',
-    capacity INT NOT NULL,
-    enrolled_count INT NOT NULL DEFAULT 0,
-    virtual_link TEXT,
-    status section_status NOT NULL DEFAULT 'planned',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE paralelos (
+    paralelo_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    asignatura_id UUID NOT NULL,
+    periodo_academico_id UUID NOT NULL,
+    docente_id UUID,
+    codigo_paralelo VARCHAR(30) NOT NULL,
+    modalidad modalidad_asignatura NOT NULL DEFAULT 'presencial',
+    capacidad INT NOT NULL,
+    cantidad_matriculados INT NOT NULL DEFAULT 0,
+    enlace_virtual TEXT,
+    estado estado_paralelo NOT NULL DEFAULT 'planificado',
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_course_sections_course
-        FOREIGN KEY (course_id)
-        REFERENCES courses(course_id),
+    CONSTRAINT fk_paralelos_asignatura
+        FOREIGN KEY (asignatura_id)
+        REFERENCES asignaturas(asignatura_id),
 
-    CONSTRAINT fk_course_sections_period
-        FOREIGN KEY (academic_period_id)
-        REFERENCES academic_periods(academic_period_id),
+    CONSTRAINT fk_paralelos_periodo
+        FOREIGN KEY (periodo_academico_id)
+        REFERENCES periodos_academicos(periodo_academico_id),
 
-    CONSTRAINT fk_course_sections_teacher
-        FOREIGN KEY (teacher_id)
-        REFERENCES teachers(teacher_id),
+    CONSTRAINT fk_paralelos_docente
+        FOREIGN KEY (docente_id)
+        REFERENCES docentes(docente_id),
 
-    CONSTRAINT chk_section_capacity
-        CHECK (capacity > 0),
+    CONSTRAINT chk_paralelo_capacidad
+        CHECK (capacidad > 0),
 
-    CONSTRAINT chk_enrolled_count
-        CHECK (enrolled_count >= 0),
+    CONSTRAINT chk_cantidad_matriculados
+        CHECK (cantidad_matriculados >= 0),
 
-    CONSTRAINT uq_course_section_period
-        UNIQUE (course_id, academic_period_id, section_code)
+    CONSTRAINT uq_asignatura_paralelo_periodo
+        UNIQUE (asignatura_id, periodo_academico_id, codigo_paralelo)
 );
 
-CREATE TABLE section_schedules (
-    section_schedule_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    course_section_id UUID NOT NULL,
-    classroom_id UUID,
-    day_of_week SMALLINT NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE horarios_paralelos (
+    horario_paralelo_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    paralelo_id UUID NOT NULL,
+    aula_id UUID,
+    dia_semana SMALLINT NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_section_schedules_section
-        FOREIGN KEY (course_section_id)
-        REFERENCES course_sections(course_section_id)
+    CONSTRAINT fk_horarios_paralelos_paralelo
+        FOREIGN KEY (paralelo_id)
+        REFERENCES paralelos(paralelo_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_section_schedules_classroom
-        FOREIGN KEY (classroom_id)
-        REFERENCES classrooms(classroom_id),
+    CONSTRAINT fk_horarios_paralelos_aula
+        FOREIGN KEY (aula_id)
+        REFERENCES aulas(aula_id),
 
-    CONSTRAINT chk_day_of_week
-        CHECK (day_of_week BETWEEN 1 AND 7),
+    CONSTRAINT chk_dia_semana
+        CHECK (dia_semana BETWEEN 1 AND 7),
 
-    CONSTRAINT chk_schedule_time
-        CHECK (start_time < end_time)
+    CONSTRAINT chk_horario_tiempo
+        CHECK (hora_inicio < hora_fin)
 );
 
 -- ============================================================
--- MATRÍCULAS
+-- MATRICULAS
 -- ============================================================
 
-CREATE TABLE enrollments (
-    enrollment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    student_id UUID NOT NULL,
-    academic_period_id UUID NOT NULL,
-    enrollment_number VARCHAR(50) NOT NULL UNIQUE,
-    status enrollment_status NOT NULL DEFAULT 'draft',
-    submitted_at TIMESTAMP,
-    approved_by UUID,
-    approved_at TIMESTAMP,
-    observations TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE matriculas (
+    matricula_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    estudiante_id UUID NOT NULL,
+    periodo_academico_id UUID NOT NULL,
+    numero_matricula VARCHAR(50) NOT NULL UNIQUE,
+    estado estado_matricula NOT NULL DEFAULT 'borrador',
+    presentada_at TIMESTAMP,
+    aprobada_por UUID,
+    aprobada_at TIMESTAMP,
+    observaciones TEXT,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_enrollments_student
-        FOREIGN KEY (student_id)
-        REFERENCES students(student_id),
+    CONSTRAINT fk_matriculas_estudiante
+        FOREIGN KEY (estudiante_id)
+        REFERENCES estudiantes(estudiante_id),
 
-    CONSTRAINT fk_enrollments_period
-        FOREIGN KEY (academic_period_id)
-        REFERENCES academic_periods(academic_period_id),
+    CONSTRAINT fk_matriculas_periodo
+        FOREIGN KEY (periodo_academico_id)
+        REFERENCES periodos_academicos(periodo_academico_id),
 
-    CONSTRAINT fk_enrollments_approved_by
-        FOREIGN KEY (approved_by)
-        REFERENCES users(user_id),
+    CONSTRAINT fk_matriculas_aprobada_por
+        FOREIGN KEY (aprobada_por)
+        REFERENCES usuarios(usuario_id),
 
-    CONSTRAINT uq_student_period_enrollment
-        UNIQUE (student_id, academic_period_id)
+    CONSTRAINT uq_estudiante_periodo_matricula
+        UNIQUE (estudiante_id, periodo_academico_id)
 );
 
-CREATE TABLE enrollment_courses (
-    enrollment_course_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    enrollment_id UUID NOT NULL,
-    course_section_id UUID NOT NULL,
-    status enrollment_course_status NOT NULL DEFAULT 'enrolled',
-    final_grade NUMERIC(5,2),
-    final_observation TEXT,
-    withdrawn_at TIMESTAMP,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE matricula_asignaturas (
+    matricula_asignatura_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    matricula_id UUID NOT NULL,
+    paralelo_id UUID NOT NULL,
+    estado estado_asignatura_matricula NOT NULL DEFAULT 'matriculado',
+    calificacion_final NUMERIC(5,2),
+    observacion_final TEXT,
+    retirada_at TIMESTAMP,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_enrollment_courses_enrollment
-        FOREIGN KEY (enrollment_id)
-        REFERENCES enrollments(enrollment_id)
+    CONSTRAINT fk_matricula_asignaturas_matricula
+        FOREIGN KEY (matricula_id)
+        REFERENCES matriculas(matricula_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_enrollment_courses_section
-        FOREIGN KEY (course_section_id)
-        REFERENCES course_sections(course_section_id),
+    CONSTRAINT fk_matricula_asignaturas_paralelo
+        FOREIGN KEY (paralelo_id)
+        REFERENCES paralelos(paralelo_id),
 
-    CONSTRAINT chk_final_grade
-        CHECK (final_grade IS NULL OR final_grade BETWEEN 0 AND 100),
+    CONSTRAINT chk_calificacion_final
+        CHECK (calificacion_final IS NULL OR calificacion_final BETWEEN 0 AND 100),
 
-    CONSTRAINT uq_enrollment_section
-        UNIQUE (enrollment_id, course_section_id)
+    CONSTRAINT uq_matricula_paralelo
+        UNIQUE (matricula_id, paralelo_id)
 );
 
 -- ============================================================
 -- CALIFICACIONES
 -- ============================================================
 
-CREATE TABLE grade_items (
-    grade_item_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    course_section_id UUID NOT NULL,
-    name VARCHAR(150) NOT NULL,
-    description TEXT,
-    weight NUMERIC(5,2) NOT NULL,
-    max_score NUMERIC(5,2) NOT NULL DEFAULT 100,
-    due_date DATE,
-    order_index INT DEFAULT 1,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE componentes_calificacion (
+    componente_calificacion_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    paralelo_id UUID NOT NULL,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    peso NUMERIC(5,2) NOT NULL,
+    puntaje_maximo NUMERIC(5,2) NOT NULL DEFAULT 100,
+    fecha_entrega DATE,
+    indice_orden INT DEFAULT 1,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_grade_items_section
-        FOREIGN KEY (course_section_id)
-        REFERENCES course_sections(course_section_id)
+    CONSTRAINT fk_componentes_paralelo
+        FOREIGN KEY (paralelo_id)
+        REFERENCES paralelos(paralelo_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT chk_grade_item_weight
-        CHECK (weight > 0 AND weight <= 100),
+    CONSTRAINT chk_componente_peso
+        CHECK (peso > 0 AND peso <= 100),
 
-    CONSTRAINT chk_grade_item_max_score
-        CHECK (max_score > 0),
+    CONSTRAINT chk_componente_puntaje_maximo
+        CHECK (puntaje_maximo > 0),
 
-    CONSTRAINT uq_grade_item_section_name
-        UNIQUE (course_section_id, name)
+    CONSTRAINT uq_componente_paralelo_nombre
+        UNIQUE (paralelo_id, nombre)
 );
 
-CREATE TABLE grades (
-    grade_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    enrollment_course_id UUID NOT NULL,
-    grade_item_id UUID NOT NULL,
-    score NUMERIC(5,2) NOT NULL,
-    feedback TEXT,
-    registered_by UUID NOT NULL,
-    registered_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE calificaciones (
+    calificacion_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    matricula_asignatura_id UUID NOT NULL,
+    componente_calificacion_id UUID NOT NULL,
+    puntaje NUMERIC(5,2) NOT NULL,
+    retroalimentacion TEXT,
+    registrada_por UUID NOT NULL,
+    registrada_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_grades_enrollment_course
-        FOREIGN KEY (enrollment_course_id)
-        REFERENCES enrollment_courses(enrollment_course_id)
+    CONSTRAINT fk_calificaciones_matricula_asignatura
+        FOREIGN KEY (matricula_asignatura_id)
+        REFERENCES matricula_asignaturas(matricula_asignatura_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_grades_grade_item
-        FOREIGN KEY (grade_item_id)
-        REFERENCES grade_items(grade_item_id)
+    CONSTRAINT fk_calificaciones_componente
+        FOREIGN KEY (componente_calificacion_id)
+        REFERENCES componentes_calificacion(componente_calificacion_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_grades_registered_by
-        FOREIGN KEY (registered_by)
-        REFERENCES users(user_id),
+    CONSTRAINT fk_calificaciones_registrada_por
+        FOREIGN KEY (registrada_por)
+        REFERENCES usuarios(usuario_id),
 
-    CONSTRAINT chk_grade_score
-        CHECK (score BETWEEN 0 AND 100),
+    CONSTRAINT chk_calificacion_puntaje
+        CHECK (puntaje BETWEEN 0 AND 100),
 
-    CONSTRAINT uq_grade_per_item
-        UNIQUE (enrollment_course_id, grade_item_id)
+    CONSTRAINT uq_calificacion_por_componente
+        UNIQUE (matricula_asignatura_id, componente_calificacion_id)
 );
 
 -- ============================================================
 -- ASISTENCIA
 -- ============================================================
 
-CREATE TABLE attendance_sessions (
-    attendance_session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    course_section_id UUID NOT NULL,
-    class_date DATE NOT NULL,
-    topic VARCHAR(255),
-    created_by UUID,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE sesiones_asistencia (
+    sesion_asistencia_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    paralelo_id UUID NOT NULL,
+    fecha_clase DATE NOT NULL,
+    tema VARCHAR(255),
+    creada_por UUID,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_attendance_sessions_section
-        FOREIGN KEY (course_section_id)
-        REFERENCES course_sections(course_section_id)
+    CONSTRAINT fk_sesiones_asistencia_paralelo
+        FOREIGN KEY (paralelo_id)
+        REFERENCES paralelos(paralelo_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_attendance_sessions_created_by
-        FOREIGN KEY (created_by)
-        REFERENCES users(user_id),
+    CONSTRAINT fk_sesiones_asistencia_creada_por
+        FOREIGN KEY (creada_por)
+        REFERENCES usuarios(usuario_id),
 
-    CONSTRAINT uq_attendance_session
-        UNIQUE (course_section_id, class_date)
+    CONSTRAINT uq_sesion_asistencia
+        UNIQUE (paralelo_id, fecha_clase)
 );
 
-CREATE TABLE attendance_records (
-    attendance_record_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    attendance_session_id UUID NOT NULL,
-    enrollment_course_id UUID NOT NULL,
-    status attendance_status NOT NULL DEFAULT 'present',
-    observation TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE registro_asistencia (
+    registro_asistencia_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    sesion_asistencia_id UUID NOT NULL,
+    matricula_asignatura_id UUID NOT NULL,
+    estado estado_asistencia NOT NULL DEFAULT 'presente',
+    observacion TEXT,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_attendance_records_session
-        FOREIGN KEY (attendance_session_id)
-        REFERENCES attendance_sessions(attendance_session_id)
+    CONSTRAINT fk_registro_asistencia_sesion
+        FOREIGN KEY (sesion_asistencia_id)
+        REFERENCES sesiones_asistencia(sesion_asistencia_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_attendance_records_enrollment_course
-        FOREIGN KEY (enrollment_course_id)
-        REFERENCES enrollment_courses(enrollment_course_id)
+    CONSTRAINT fk_registro_asistencia_matricula_asignatura
+        FOREIGN KEY (matricula_asignatura_id)
+        REFERENCES matricula_asignaturas(matricula_asignatura_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT uq_attendance_record
-        UNIQUE (attendance_session_id, enrollment_course_id)
+    CONSTRAINT uq_registro_asistencia
+        UNIQUE (sesion_asistencia_id, matricula_asignatura_id)
 );
 
 -- ============================================================
 -- SOLICITUDES ADMINISTRATIVAS
 -- ============================================================
 
-CREATE TABLE academic_requests (
-    academic_request_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    student_id UUID NOT NULL,
-    request_type request_type NOT NULL,
-    enrollment_id UUID,
-    enrollment_course_id UUID,
-    course_section_id UUID,
-    description TEXT NOT NULL,
-    status request_status NOT NULL DEFAULT 'pending',
-    reviewed_by UUID,
-    reviewed_at TIMESTAMP,
-    response TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE solicitudes_academicas (
+    solicitud_academica_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    estudiante_id UUID NOT NULL,
+    tipo_solicitud tipo_solicitud NOT NULL,
+    matricula_id UUID,
+    matricula_asignatura_id UUID,
+    paralelo_id UUID,
+    descripcion TEXT NOT NULL,
+    estado estado_solicitud NOT NULL DEFAULT 'pendiente',
+    revisada_por UUID,
+    revisada_at TIMESTAMP,
+    respuesta TEXT,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_academic_requests_student
-        FOREIGN KEY (student_id)
-        REFERENCES students(student_id),
+    CONSTRAINT fk_solicitudes_estudiante
+        FOREIGN KEY (estudiante_id)
+        REFERENCES estudiantes(estudiante_id),
 
-    CONSTRAINT fk_academic_requests_enrollment
-        FOREIGN KEY (enrollment_id)
-        REFERENCES enrollments(enrollment_id),
+    CONSTRAINT fk_solicitudes_matricula
+        FOREIGN KEY (matricula_id)
+        REFERENCES matriculas(matricula_id),
 
-    CONSTRAINT fk_academic_requests_enrollment_course
-        FOREIGN KEY (enrollment_course_id)
-        REFERENCES enrollment_courses(enrollment_course_id),
+    CONSTRAINT fk_solicitudes_matricula_asignatura
+        FOREIGN KEY (matricula_asignatura_id)
+        REFERENCES matricula_asignaturas(matricula_asignatura_id),
 
-    CONSTRAINT fk_academic_requests_section
-        FOREIGN KEY (course_section_id)
-        REFERENCES course_sections(course_section_id),
+    CONSTRAINT fk_solicitudes_paralelo
+        FOREIGN KEY (paralelo_id)
+        REFERENCES paralelos(paralelo_id),
 
-    CONSTRAINT fk_academic_requests_reviewed_by
-        FOREIGN KEY (reviewed_by)
-        REFERENCES users(user_id)
+    CONSTRAINT fk_solicitudes_revisada_por
+        FOREIGN KEY (revisada_por)
+        REFERENCES usuarios(usuario_id)
 );
 
 -- ============================================================
 -- DOCUMENTOS ESTUDIANTILES
 -- ============================================================
 
-CREATE TABLE student_documents (
-    student_document_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    student_id UUID NOT NULL,
-    document_type VARCHAR(100) NOT NULL,
-    file_name VARCHAR(255),
-    file_url TEXT NOT NULL,
-    status document_status NOT NULL DEFAULT 'pending',
-    reviewed_by UUID,
-    reviewed_at TIMESTAMP,
-    observation TEXT,
-    uploaded_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE documentos_estudiante (
+    documento_estudiante_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    estudiante_id UUID NOT NULL,
+    tipo_documento VARCHAR(100) NOT NULL,
+    nombre_archivo VARCHAR(255),
+    url_archivo TEXT NOT NULL,
+    estado estado_documento NOT NULL DEFAULT 'pendiente',
+    revisado_por UUID,
+    revisado_at TIMESTAMP,
+    observacion TEXT,
+    cargado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_student_documents_student
-        FOREIGN KEY (student_id)
-        REFERENCES students(student_id)
+    CONSTRAINT fk_documentos_estudiante_estudiante
+        FOREIGN KEY (estudiante_id)
+        REFERENCES estudiantes(estudiante_id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_student_documents_reviewed_by
-        FOREIGN KEY (reviewed_by)
-        REFERENCES users(user_id)
+    CONSTRAINT fk_documentos_estudiante_revisado_por
+        FOREIGN KEY (revisado_por)
+        REFERENCES usuarios(usuario_id)
 );
 
 -- ============================================================
 -- NOTIFICACIONES
 -- ============================================================
 
-CREATE TABLE notifications (
-    notification_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL,
-    title VARCHAR(150) NOT NULL,
-    message TEXT NOT NULL,
-    status notification_status NOT NULL DEFAULT 'unread',
-    read_at TIMESTAMP,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE notificaciones (
+    notificacion_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id UUID NOT NULL,
+    titulo VARCHAR(150) NOT NULL,
+    mensaje TEXT NOT NULL,
+    estado estado_notificacion NOT NULL DEFAULT 'no_leido',
+    leido_at TIMESTAMP,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    actualizado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_notifications_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
+    CONSTRAINT fk_notificaciones_usuario
+        FOREIGN KEY (usuario_id)
+        REFERENCES usuarios(usuario_id)
         ON DELETE CASCADE
 );
 
 -- ============================================================
--- AUDITORÍA
+-- AUDITORIA
 -- ============================================================
 
-CREATE TABLE audit_logs (
-    audit_log_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    actor_user_id UUID,
-    action VARCHAR(100) NOT NULL,
-    entity_name VARCHAR(100) NOT NULL,
-    entity_id UUID,
-    old_values JSONB,
-    new_values JSONB,
-    ip_address VARCHAR(50),
-    user_agent TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+CREATE TABLE registros_auditoria (
+    registro_auditoria_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_actor_id UUID,
+    accion VARCHAR(100) NOT NULL,
+    nombre_entidad VARCHAR(100) NOT NULL,
+    entidad_id UUID,
+    valores_anteriores JSONB,
+    valores_nuevos JSONB,
+    direccion_ip VARCHAR(50),
+    agente_usuario TEXT,
+    creado_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_audit_logs_actor
-        FOREIGN KEY (actor_user_id)
-        REFERENCES users(user_id)
+    CONSTRAINT fk_registros_auditoria_actor
+        FOREIGN KEY (usuario_actor_id)
+        REFERENCES usuarios(usuario_id)
 );
 
 -- ============================================================
--- TRIGGERS updated_at
+-- TRIGGERS actualizado_at
 -- ============================================================
 
 DO $$
@@ -804,84 +804,84 @@ DECLARE
     tbl TEXT;
 BEGIN
     FOREACH tbl IN ARRAY ARRAY[
-        'users',
+        'usuarios',
         'roles',
-        'permissions',
-        'faculties',
-        'programs',
-        'curricula',
-        'courses',
-        'students',
-        'teachers',
-        'administrative_staff',
-        'academic_periods',
-        'classrooms',
-        'course_sections',
-        'enrollments',
-        'enrollment_courses',
-        'grade_items',
-        'grades',
-        'attendance_sessions',
-        'attendance_records',
-        'academic_requests',
-        'student_documents',
-        'notifications'
+        'permisos',
+        'facultades',
+        'carreras',
+        'mallas_curriculares',
+        'asignaturas',
+        'estudiantes',
+        'docentes',
+        'personal_administrativo',
+        'periodos_academicos',
+        'aulas',
+        'paralelos',
+        'matriculas',
+        'matricula_asignaturas',
+        'componentes_calificacion',
+        'calificaciones',
+        'sesiones_asistencia',
+        'registro_asistencia',
+        'solicitudes_academicas',
+        'documentos_estudiante',
+        'notificaciones'
     ]
     LOOP
         EXECUTE format(
-            'DROP TRIGGER IF EXISTS %I ON academic.%I',
-            'trg_' || tbl || '_updated_at',
+            'DROP TRIGGER IF EXISTS %I ON academico.%I',
+            'trg_' || tbl || '_actualizado_at',
             tbl
         );
 
         EXECUTE format(
             'CREATE TRIGGER %I
-             BEFORE UPDATE ON academic.%I
+             BEFORE UPDATE ON academico.%I
              FOR EACH ROW
-             EXECUTE FUNCTION academic.set_updated_at()',
-            'trg_' || tbl || '_updated_at',
+             EXECUTE FUNCTION academico.establecer_actualizado_at()',
+            'trg_' || tbl || '_actualizado_at',
             tbl
         );
     END LOOP;
 END $$;
 
 -- ============================================================
--- FUNCIÓN PARA ACTUALIZAR enrolled_count
+-- FUNCION PARA ACTUALIZAR cantidad_matriculados
 -- ============================================================
 
-CREATE OR REPLACE FUNCTION academic.refresh_section_enrolled_count(p_course_section_id UUID)
+CREATE OR REPLACE FUNCTION academico.actualizar_cantidad_matriculados(p_paralelo_id UUID)
 RETURNS VOID AS $$
 BEGIN
-    UPDATE academic.course_sections cs
-    SET enrolled_count = (
+    UPDATE academico.paralelos p
+    SET cantidad_matriculados = (
         SELECT COUNT(*)
-        FROM academic.enrollment_courses ec
-        INNER JOIN academic.enrollments e
-            ON e.enrollment_id = ec.enrollment_id
-        WHERE ec.course_section_id = p_course_section_id
-          AND ec.status = 'enrolled'
-          AND e.status IN ('pending', 'approved')
+        FROM academico.matricula_asignaturas ma
+        INNER JOIN academico.matriculas m
+            ON m.matricula_id = ma.matricula_id
+        WHERE ma.paralelo_id = p_paralelo_id
+          AND ma.estado = 'matriculado'
+          AND m.estado IN ('pendiente', 'aprobado')
     )
-    WHERE cs.course_section_id = p_course_section_id;
+    WHERE p.paralelo_id = p_paralelo_id;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION academic.trg_refresh_section_enrolled_count()
+CREATE OR REPLACE FUNCTION academico.trg_actualizar_cantidad_matriculados()
 RETURNS TRIGGER AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
-        PERFORM academic.refresh_section_enrolled_count(NEW.course_section_id);
+        PERFORM academico.actualizar_cantidad_matriculados(NEW.paralelo_id);
         RETURN NEW;
     ELSIF TG_OP = 'UPDATE' THEN
-        PERFORM academic.refresh_section_enrolled_count(NEW.course_section_id);
+        PERFORM academico.actualizar_cantidad_matriculados(NEW.paralelo_id);
 
-        IF OLD.course_section_id IS DISTINCT FROM NEW.course_section_id THEN
-            PERFORM academic.refresh_section_enrolled_count(OLD.course_section_id);
+        IF OLD.paralelo_id IS DISTINCT FROM NEW.paralelo_id THEN
+            PERFORM academico.actualizar_cantidad_matriculados(OLD.paralelo_id);
         END IF;
 
         RETURN NEW;
     ELSIF TG_OP = 'DELETE' THEN
-        PERFORM academic.refresh_section_enrolled_count(OLD.course_section_id);
+        PERFORM academico.actualizar_cantidad_matriculados(OLD.paralelo_id);
         RETURN OLD;
     END IF;
 
@@ -889,187 +889,187 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_enrollment_courses_refresh_count ON academic.enrollment_courses;
+DROP TRIGGER IF EXISTS trg_matricula_asignaturas_actualizar_cantidad ON academico.matricula_asignaturas;
 
-CREATE TRIGGER trg_enrollment_courses_refresh_count
-AFTER INSERT OR UPDATE OR DELETE ON academic.enrollment_courses
+CREATE TRIGGER trg_matricula_asignaturas_actualizar_cantidad
+AFTER INSERT OR UPDATE OR DELETE ON academico.matricula_asignaturas
 FOR EACH ROW
-EXECUTE FUNCTION academic.trg_refresh_section_enrolled_count();
+EXECUTE FUNCTION academico.trg_actualizar_cantidad_matriculados();
 
 -- ============================================================
--- ÍNDICES
+-- INDICES
 -- ============================================================
 
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_status ON users(status);
+CREATE INDEX idx_usuarios_correo ON usuarios(correo_electronico);
+CREATE INDEX idx_usuarios_estado ON usuarios(estado);
 
-CREATE INDEX idx_students_user ON students(user_id);
-CREATE INDEX idx_students_program ON students(program_id);
-CREATE INDEX idx_students_status ON students(status);
+CREATE INDEX idx_estudiantes_usuario ON estudiantes(usuario_id);
+CREATE INDEX idx_estudiantes_carrera ON estudiantes(carrera_id);
+CREATE INDEX idx_estudiantes_estado ON estudiantes(estado);
 
-CREATE INDEX idx_teachers_user ON teachers(user_id);
-CREATE INDEX idx_teachers_faculty ON teachers(faculty_id);
+CREATE INDEX idx_docentes_usuario ON docentes(usuario_id);
+CREATE INDEX idx_docentes_facultad ON docentes(facultad_id);
 
-CREATE INDEX idx_programs_faculty ON programs(faculty_id);
-CREATE INDEX idx_programs_academic_level ON programs(academic_level);
-CREATE INDEX idx_curricula_program ON curricula(program_id);
-CREATE INDEX idx_curriculum_courses_curriculum ON curriculum_courses(curriculum_id);
-CREATE INDEX idx_curriculum_courses_course ON curriculum_courses(course_id);
+CREATE INDEX idx_carreras_facultad ON carreras(facultad_id);
+CREATE INDEX idx_carreras_nivel ON carreras(nivel_academico);
+CREATE INDEX idx_mallas_carrera ON mallas_curriculares(carrera_id);
+CREATE INDEX idx_malla_asignaturas_malla ON malla_asignaturas(malla_id);
+CREATE INDEX idx_malla_asignaturas_asignatura ON malla_asignaturas(asignatura_id);
 
-CREATE INDEX idx_courses_code ON courses(code);
-CREATE INDEX idx_course_sections_course ON course_sections(course_id);
-CREATE INDEX idx_course_sections_period ON course_sections(academic_period_id);
-CREATE INDEX idx_course_sections_teacher ON course_sections(teacher_id);
-CREATE INDEX idx_course_sections_status ON course_sections(status);
+CREATE INDEX idx_asignaturas_codigo ON asignaturas(codigo);
+CREATE INDEX idx_paralelos_asignatura ON paralelos(asignatura_id);
+CREATE INDEX idx_paralelos_periodo ON paralelos(periodo_academico_id);
+CREATE INDEX idx_paralelos_docente ON paralelos(docente_id);
+CREATE INDEX idx_paralelos_estado ON paralelos(estado);
 
-CREATE INDEX idx_enrollments_student ON enrollments(student_id);
-CREATE INDEX idx_enrollments_period ON enrollments(academic_period_id);
-CREATE INDEX idx_enrollments_status ON enrollments(status);
+CREATE INDEX idx_matriculas_estudiante ON matriculas(estudiante_id);
+CREATE INDEX idx_matriculas_periodo ON matriculas(periodo_academico_id);
+CREATE INDEX idx_matriculas_estado ON matriculas(estado);
 
-CREATE INDEX idx_enrollment_courses_enrollment ON enrollment_courses(enrollment_id);
-CREATE INDEX idx_enrollment_courses_section ON enrollment_courses(course_section_id);
-CREATE INDEX idx_enrollment_courses_status ON enrollment_courses(status);
+CREATE INDEX idx_matricula_asignaturas_matricula ON matricula_asignaturas(matricula_id);
+CREATE INDEX idx_matricula_asignaturas_paralelo ON matricula_asignaturas(paralelo_id);
+CREATE INDEX idx_matricula_asignaturas_estado ON matricula_asignaturas(estado);
 
-CREATE INDEX idx_grade_items_section ON grade_items(course_section_id);
-CREATE INDEX idx_grades_enrollment_course ON grades(enrollment_course_id);
-CREATE INDEX idx_grades_grade_item ON grades(grade_item_id);
+CREATE INDEX idx_componentes_paralelo ON componentes_calificacion(paralelo_id);
+CREATE INDEX idx_calificaciones_matricula_asignatura ON calificaciones(matricula_asignatura_id);
+CREATE INDEX idx_calificaciones_componente ON calificaciones(componente_calificacion_id);
 
-CREATE INDEX idx_attendance_sessions_section ON attendance_sessions(course_section_id);
-CREATE INDEX idx_attendance_records_session ON attendance_records(attendance_session_id);
-CREATE INDEX idx_attendance_records_enrollment_course ON attendance_records(enrollment_course_id);
+CREATE INDEX idx_sesiones_asistencia_paralelo ON sesiones_asistencia(paralelo_id);
+CREATE INDEX idx_registro_asistencia_sesion ON registro_asistencia(sesion_asistencia_id);
+CREATE INDEX idx_registro_asistencia_matricula_asignatura ON registro_asistencia(matricula_asignatura_id);
 
-CREATE INDEX idx_academic_requests_student ON academic_requests(student_id);
-CREATE INDEX idx_academic_requests_status ON academic_requests(status);
-CREATE INDEX idx_academic_requests_type ON academic_requests(request_type);
+CREATE INDEX idx_solicitudes_estudiante ON solicitudes_academicas(estudiante_id);
+CREATE INDEX idx_solicitudes_estado ON solicitudes_academicas(estado);
+CREATE INDEX idx_solicitudes_tipo ON solicitudes_academicas(tipo_solicitud);
 
-CREATE INDEX idx_notifications_user ON notifications(user_id);
-CREATE INDEX idx_notifications_status ON notifications(status);
+CREATE INDEX idx_notificaciones_usuario ON notificaciones(usuario_id);
+CREATE INDEX idx_notificaciones_estado ON notificaciones(estado);
 
-CREATE INDEX idx_audit_logs_actor ON audit_logs(actor_user_id);
-CREATE INDEX idx_audit_logs_entity ON audit_logs(entity_name, entity_id);
-CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX idx_registros_auditoria_actor ON registros_auditoria(usuario_actor_id);
+CREATE INDEX idx_registros_auditoria_entidad ON registros_auditoria(nombre_entidad, entidad_id);
+CREATE INDEX idx_registros_auditoria_creado_at ON registros_auditoria(creado_at);
 
 -- ============================================================
--- VISTAS ÚTILES
+-- VISTAS UTILES
 -- ============================================================
 
-CREATE OR REPLACE VIEW v_student_enrollments AS
+CREATE OR REPLACE VIEW v_matriculas_estudiante AS
 SELECT
-    e.enrollment_id,
-    e.enrollment_number,
-    e.status AS enrollment_status,
-    e.created_at AS enrollment_created_at,
-    s.student_id,
-    s.student_code,
-    u.full_name AS student_name,
-    u.email AS student_email,
-    ap.academic_period_id,
-    ap.code AS academic_period_code,
-    ap.name AS academic_period_name,
-    p.program_id,
-    p.name AS program_name,
-    p.academic_level AS program_academic_level
-FROM enrollments e
-INNER JOIN students s
-    ON s.student_id = e.student_id
-INNER JOIN users u
-    ON u.user_id = s.user_id
-INNER JOIN academic_periods ap
-    ON ap.academic_period_id = e.academic_period_id
-INNER JOIN programs p
-    ON p.program_id = s.program_id;
+    m.matricula_id,
+    m.numero_matricula,
+    m.estado AS estado_matricula,
+    m.creado_at AS fecha_creacion_matricula,
+    e.estudiante_id,
+    e.codigo_estudiante,
+    u.nombre_completo AS nombre_estudiante,
+    u.correo_electronico AS correo_estudiante,
+    pa.periodo_academico_id,
+    pa.codigo AS codigo_periodo,
+    pa.nombre AS nombre_periodo,
+    c.carrera_id,
+    c.nombre AS nombre_carrera,
+    c.nivel_academico AS nivel_carrera
+FROM matriculas m
+INNER JOIN estudiantes e
+    ON e.estudiante_id = m.estudiante_id
+INNER JOIN usuarios u
+    ON u.usuario_id = e.usuario_id
+INNER JOIN periodos_academicos pa
+    ON pa.periodo_academico_id = m.periodo_academico_id
+INNER JOIN carreras c
+    ON c.carrera_id = e.carrera_id;
 
-CREATE OR REPLACE VIEW v_course_sections_detail AS
+CREATE OR REPLACE VIEW v_detalle_paralelos AS
 SELECT
-    cs.course_section_id,
-    c.code AS course_code,
-    c.name AS course_name,
-    cs.section_code,
-    cs.modality,
-    cs.capacity,
-    cs.enrolled_count,
-    cs.status AS section_status,
-    ap.code AS academic_period_code,
-    ap.name AS academic_period_name,
-    tu.full_name AS teacher_name
-FROM course_sections cs
-INNER JOIN courses c
-    ON c.course_id = cs.course_id
-INNER JOIN academic_periods ap
-    ON ap.academic_period_id = cs.academic_period_id
-LEFT JOIN teachers t
-    ON t.teacher_id = cs.teacher_id
-LEFT JOIN users tu
-    ON tu.user_id = t.user_id;
+    p.paralelo_id,
+    a.codigo AS codigo_asignatura,
+    a.nombre AS nombre_asignatura,
+    p.codigo_paralelo,
+    p.modalidad,
+    p.capacidad,
+    p.cantidad_matriculados,
+    p.estado AS estado_paralelo,
+    pa.codigo AS codigo_periodo,
+    pa.nombre AS nombre_periodo,
+    du.nombre_completo AS nombre_docente
+FROM paralelos p
+INNER JOIN asignaturas a
+    ON a.asignatura_id = p.asignatura_id
+INNER JOIN periodos_academicos pa
+    ON pa.periodo_academico_id = p.periodo_academico_id
+LEFT JOIN docentes d
+    ON d.docente_id = p.docente_id
+LEFT JOIN usuarios du
+    ON du.usuario_id = d.usuario_id;
 
-CREATE OR REPLACE VIEW v_student_grades AS
+CREATE OR REPLACE VIEW v_calificaciones_estudiante AS
 SELECT
-    s.student_id,
-    s.student_code,
-    u.full_name AS student_name,
-    e.enrollment_id,
-    ap.code AS academic_period_code,
-    c.code AS course_code,
-    c.name AS course_name,
-    cs.section_code,
-    gi.name AS grade_item_name,
-    gi.weight,
-    g.score,
-    ec.final_grade
-FROM grades g
-INNER JOIN grade_items gi
-    ON gi.grade_item_id = g.grade_item_id
-INNER JOIN enrollment_courses ec
-    ON ec.enrollment_course_id = g.enrollment_course_id
-INNER JOIN enrollments e
-    ON e.enrollment_id = ec.enrollment_id
-INNER JOIN students s
-    ON s.student_id = e.student_id
-INNER JOIN users u
-    ON u.user_id = s.user_id
-INNER JOIN course_sections cs
-    ON cs.course_section_id = ec.course_section_id
-INNER JOIN courses c
-    ON c.course_id = cs.course_id
-INNER JOIN academic_periods ap
-    ON ap.academic_period_id = e.academic_period_id;
+    e.estudiante_id,
+    e.codigo_estudiante,
+    u.nombre_completo AS nombre_estudiante,
+    m.matricula_id,
+    pa.codigo AS codigo_periodo,
+    asig.codigo AS codigo_asignatura,
+    asig.nombre AS nombre_asignatura,
+    p.codigo_paralelo,
+    cc.nombre AS nombre_componente,
+    cc.peso,
+    cal.puntaje,
+    ma.calificacion_final
+FROM calificaciones cal
+INNER JOIN componentes_calificacion cc
+    ON cc.componente_calificacion_id = cal.componente_calificacion_id
+INNER JOIN matricula_asignaturas ma
+    ON ma.matricula_asignatura_id = cal.matricula_asignatura_id
+INNER JOIN matriculas m
+    ON m.matricula_id = ma.matricula_id
+INNER JOIN estudiantes e
+    ON e.estudiante_id = m.estudiante_id
+INNER JOIN usuarios u
+    ON u.usuario_id = e.usuario_id
+INNER JOIN paralelos p
+    ON p.paralelo_id = ma.paralelo_id
+INNER JOIN asignaturas asig
+    ON asig.asignatura_id = p.asignatura_id
+INNER JOIN periodos_academicos pa
+    ON pa.periodo_academico_id = m.periodo_academico_id;
 
 -- ============================================================
 -- DATOS INICIALES
 -- ============================================================
 
-INSERT INTO roles (name, description)
+INSERT INTO roles (nombre, descripcion)
 VALUES
     ('admin', 'Administrador general del sistema'),
     ('student', 'Estudiante'),
     ('teacher', 'Docente'),
-    ('secretary', 'Secretaría académica'),
-    ('coordinator', 'Coordinador académico')
-ON CONFLICT (name) DO NOTHING;
+    ('secretary', 'Secretaria academica'),
+    ('coordinator', 'Coordinador academico')
+ON CONFLICT (nombre) DO NOTHING;
 
-INSERT INTO permissions (code, description)
+INSERT INTO permisos (codigo, descripcion)
 VALUES
     ('users.manage', 'Gestionar usuarios'),
     ('roles.manage', 'Gestionar roles y permisos'),
     ('students.manage', 'Gestionar estudiantes'),
     ('teachers.manage', 'Gestionar docentes'),
     ('programs.manage', 'Gestionar carreras'),
-    ('courses.manage', 'Gestionar cursos'),
-    ('periods.manage', 'Gestionar periodos académicos'),
+    ('courses.manage', 'Gestionar asignaturas'),
+    ('periods.manage', 'Gestionar periodos academicos'),
     ('sections.manage', 'Gestionar paralelos'),
-    ('enrollments.manage', 'Gestionar matrículas'),
+    ('enrollments.manage', 'Gestionar matriculas'),
     ('grades.manage', 'Gestionar calificaciones'),
     ('attendance.manage', 'Gestionar asistencia'),
-    ('requests.manage', 'Gestionar solicitudes académicas'),
+    ('requests.manage', 'Gestionar solicitudes academicas'),
     ('reports.view', 'Ver reportes')
-ON CONFLICT (code) DO NOTHING;
+ON CONFLICT (codigo) DO NOTHING;
 
 -- Asignar todos los permisos al rol admin
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.role_id, p.permission_id
+INSERT INTO rol_permisos (rol_id, permiso_id)
+SELECT r.rol_id, p.permiso_id
 FROM roles r
-CROSS JOIN permissions p
-WHERE r.name = 'admin'
+CROSS JOIN permisos p
+WHERE r.nombre = 'admin'
 ON CONFLICT DO NOTHING;
 
 -- ============================================================
