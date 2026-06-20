@@ -1,6 +1,8 @@
 # Diseño y Estructura de la Base de Datos: Sistema de Gestión Académica
 
-![Diagrama de Entidad-Relación](database_er_diagram.jpg)
+![Diagrama de Entidad-Relación (Concepto)](database_er_diagram.jpg)
+
+![Diagrama de Entidad-Relación (Físico SVG)](database_design.svg)
 
 Este documento detalla el diseño relacional del esquema `academico` del Sistema de Gestión Académica. Para facilitar la comprensión de las conexiones y dependencias, el esquema de 28 tablas ha sido organizado en **módulos lógicos**.
 
