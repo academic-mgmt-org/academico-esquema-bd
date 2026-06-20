@@ -172,10 +172,6 @@ Table "carreras" {
   "creado_at" TIMESTAMP [not null, default: `NOW()`]
   "actualizado_at" TIMESTAMP [not null, default: `NOW()`]
 
-  Checks {
-    `duracion_semestres > 0` [name: 'chk_carrera_duracion']
-  }
-
   Indexes {
     facultad_id [name: "idx_carreras_facultad"]
     nivel_academico [name: "idx_carreras_nivel"]
@@ -210,11 +206,6 @@ Table "asignaturas" {
   "creado_at" TIMESTAMP [not null, default: `NOW()`]
   "actualizado_at" TIMESTAMP [not null, default: `NOW()`]
 
-  Checks {
-    `creditos >= 0` [name: 'chk_asignatura_creditos']
-    `horas_teoria >= 0 AND horas_practica >= 0` [name: 'chk_asignatura_horas']
-  }
-
   Indexes {
     codigo [name: "idx_asignaturas_codigo"]
   }
@@ -228,10 +219,6 @@ Table "malla_asignaturas" {
   "es_obligatoria" BOOLEAN [not null, default: true]
   "creado_at" TIMESTAMP [not null, default: `NOW()`]
 
-  Checks {
-    `numero_semestre > 0` [name: 'chk_malla_semestre']
-  }
-
   Indexes {
     (malla_id, asignatura_id) [unique, name: "uq_malla_asignatura"]
     malla_id [name: "idx_malla_asignaturas_malla"]
@@ -242,10 +229,6 @@ Table "malla_asignaturas" {
 Table "prerrequisitos_asignaturas" {
   "asignatura_id" UUID [not null]
   "asignatura_prerrequisito_id" UUID [not null]
-
-  Checks {
-    `asignatura_id <> asignatura_prerrequisito_id` [name: 'chk_no_auto_prerrequisito']
-  }
 
   Indexes {
     (asignatura_id, asignatura_prerrequisito_id) [pk]
@@ -267,10 +250,6 @@ Table "estudiantes" {
   "estado" estado_persona_academica [not null, default: 'activo']
   "creado_at" TIMESTAMP [not null, default: `NOW()`]
   "actualizado_at" TIMESTAMP [not null, default: `NOW()`]
-
-  Checks {
-    `semestre_actual IS NULL OR semestre_actual > 0` [name: 'chk_estudiante_semestre']
-  }
 
   Indexes {
     usuario_id [name: "idx_estudiantes_usuario"]
@@ -322,16 +301,6 @@ Table "periodos_academicos" {
   "estado" estado_periodo [not null, default: 'planificado']
   "creado_at" TIMESTAMP [not null, default: `NOW()`]
   "actualizado_at" TIMESTAMP [not null, default: `NOW()`]
-
-  Checks {
-    `fecha_inicio < fecha_fin` [name: 'chk_periodo_fechas']
-    `fecha_inicio_matriculacion IS NULL
-            OR fecha_fin_matriculacion IS NULL
-            OR fecha_inicio_matriculacion <= fecha_fin_matriculacion` [name: 'chk_matriculacion_fechas']
-    `fecha_inicio_calificaciones IS NULL
-            OR fecha_fin_calificaciones IS NULL
-            OR fecha_inicio_calificaciones <= fecha_fin_calificaciones` [name: 'chk_calificaciones_fechas']
-  }
 }
 
 Table "aulas" {
@@ -343,10 +312,6 @@ Table "aulas" {
   "estado" estado_general [not null, default: 'activo']
   "creado_at" TIMESTAMP [not null, default: `NOW()`]
   "actualizado_at" TIMESTAMP [not null, default: `NOW()`]
-
-  Checks {
-    `capacidad >= 0` [name: 'chk_aula_capacidad']
-  }
 }
 
 Table "paralelos" {
@@ -362,11 +327,6 @@ Table "paralelos" {
   "estado" estado_paralelo [not null, default: 'planificado']
   "creado_at" TIMESTAMP [not null, default: `NOW()`]
   "actualizado_at" TIMESTAMP [not null, default: `NOW()`]
-
-  Checks {
-    `capacidad > 0` [name: 'chk_paralelo_capacidad']
-    `cantidad_matriculados >= 0` [name: 'chk_cantidad_matriculados']
-  }
 
   Indexes {
     (asignatura_id, periodo_academico_id, codigo_paralelo) [unique, name: "uq_asignatura_paralelo_periodo"]
@@ -385,11 +345,6 @@ Table "horarios_paralelos" {
   "hora_inicio" TIME [not null]
   "hora_fin" TIME [not null]
   "creado_at" TIMESTAMP [not null, default: `NOW()`]
-
-  Checks {
-    `dia_semana BETWEEN 1 AND 7` [name: 'chk_dia_semana']
-    `hora_inicio < hora_fin` [name: 'chk_horario_tiempo']
-  }
 }
 
 Table "matriculas" {
@@ -418,15 +373,11 @@ Table "matricula_asignaturas" {
   "matricula_id" UUID [not null]
   "paralelo_id" UUID [not null]
   "estado" estado_asignatura_matricula [not null, default: 'matriculado']
-  "calificacion_final" NUMERIC(5,2)
+  "calificacion_final" NUMERIC
   "observacion_final" TEXT
   "retirada_at" TIMESTAMP
   "creado_at" TIMESTAMP [not null, default: `NOW()`]
   "actualizado_at" TIMESTAMP [not null, default: `NOW()`]
-
-  Checks {
-    `calificacion_final IS NULL OR calificacion_final BETWEEN 0 AND 100` [name: 'chk_calificacion_final']
-  }
 
   Indexes {
     (matricula_id, paralelo_id) [unique, name: "uq_matricula_paralelo"]
@@ -441,17 +392,12 @@ Table "componentes_calificacion" {
   "paralelo_id" UUID [not null]
   "nombre" VARCHAR(150) [not null]
   "descripcion" TEXT
-  "peso" NUMERIC(5,2) [not null]
-  "puntaje_maximo" NUMERIC(5,2) [not null, default: 100]
+  "peso" NUMERIC [not null]
+  "puntaje_maximo" NUMERIC [not null, default: 100]
   "fecha_entrega" DATE
   "indice_orden" INT [default: 1]
   "creado_at" TIMESTAMP [not null, default: `NOW()`]
   "actualizado_at" TIMESTAMP [not null, default: `NOW()`]
-
-  Checks {
-    `peso > 0 AND peso <= 100` [name: 'chk_componente_peso']
-    `puntaje_maximo > 0` [name: 'chk_componente_puntaje_maximo']
-  }
 
   Indexes {
     (paralelo_id, nombre) [unique, name: "uq_componente_paralelo_nombre"]
@@ -463,16 +409,12 @@ Table "calificaciones" {
   "calificacion_id" UUID [pk, default: `gen_random_uuid()`]
   "matricula_asignatura_id" UUID [not null]
   "componente_calificacion_id" UUID [not null]
-  "puntaje" NUMERIC(5,2) [not null]
+  "puntaje" NUMERIC [not null]
   "retroalimentacion" TEXT
   "registrada_por" UUID [not null]
   "registrada_at" TIMESTAMP [not null, default: `NOW()`]
   "creado_at" TIMESTAMP [not null, default: `NOW()`]
   "actualizado_at" TIMESTAMP [not null, default: `NOW()`]
-
-  Checks {
-    `puntaje BETWEEN 0 AND 100` [name: 'chk_calificacion_puntaje']
-  }
 
   Indexes {
     (matricula_asignatura_id, componente_calificacion_id) [unique, name: "uq_calificacion_por_componente"]
@@ -670,30 +612,3 @@ Ref "fk_notificaciones_usuario":"usuarios"."usuario_id" < "notificaciones"."usua
 
 Ref "fk_registros_auditoria_actor":"usuarios"."usuario_id" < "registros_auditoria"."usuario_actor_id"
 
-Records roles(nombre, descripcion) {
-  'admin', 'Administrador general del sistema'
-  'student', 'Estudiante'
-  'teacher', 'Docente'
-  'secretary', 'Secretaria academica'
-  'coordinator', 'Coordinador academico'
-}
-
-Records permisos(codigo, descripcion) {
-  'users.manage', 'Gestionar usuarios'
-  'roles.manage', 'Gestionar roles y permisos'
-  'students.manage', 'Gestionar estudiantes'
-  'teachers.manage', 'Gestionar docentes'
-  'programs.manage', 'Gestionar carreras'
-  'courses.manage', 'Gestionar asignaturas'
-  'periods.manage', 'Gestionar periodos academicos'
-  'sections.manage', 'Gestionar paralelos'
-  'enrollments.manage', 'Gestionar matriculas'
-  'grades.manage', 'Gestionar calificaciones'
-  'attendance.manage', 'Gestionar asistencia'
-  'requests.manage', 'Gestionar solicitudes academicas'
-  'reports.view', 'Ver reportes'
-}
-
-Records rol_permisos(rol_id, permiso_id) {
-
-}
