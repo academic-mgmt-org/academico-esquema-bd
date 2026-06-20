@@ -20,8 +20,8 @@ SET search_path TO academic, public;
 -- EXTENSIONES
 -- ============================================================
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-CREATE EXTENSION IF NOT EXISTS citext;
+-- CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- CREATE EXTENSION IF NOT EXISTS citext;
 
 -- ============================================================
 -- TIPOS ENUM
@@ -139,7 +139,7 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE users (
     user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     full_name VARCHAR(150) NOT NULL,
-    email CITEXT NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     phone VARCHAR(30),
     avatar_url TEXT,
