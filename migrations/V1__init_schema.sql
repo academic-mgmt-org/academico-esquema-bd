@@ -120,6 +120,11 @@ CREATE TYPE course_modality AS ENUM (
     'hybrid'
 );
 
+CREATE TYPE program_level AS ENUM (
+    'undergraduate',
+    'postgraduate'
+);
+
 -- ============================================================
 -- FUNCIÓN PARA updated_at
 -- ============================================================
@@ -223,6 +228,7 @@ CREATE TABLE programs (
     name VARCHAR(150) NOT NULL,
     degree_title VARCHAR(150),
     duration_semesters INT NOT NULL,
+    academic_level program_level NOT NULL DEFAULT 'undergraduate',
     status general_status NOT NULL DEFAULT 'active',
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -905,6 +911,7 @@ CREATE INDEX idx_teachers_user ON teachers(user_id);
 CREATE INDEX idx_teachers_faculty ON teachers(faculty_id);
 
 CREATE INDEX idx_programs_faculty ON programs(faculty_id);
+CREATE INDEX idx_programs_academic_level ON programs(academic_level);
 CREATE INDEX idx_curricula_program ON curricula(program_id);
 CREATE INDEX idx_curriculum_courses_curriculum ON curriculum_courses(curriculum_id);
 CREATE INDEX idx_curriculum_courses_course ON curriculum_courses(course_id);
@@ -960,7 +967,8 @@ SELECT
     ap.code AS academic_period_code,
     ap.name AS academic_period_name,
     p.program_id,
-    p.name AS program_name
+    p.name AS program_name,
+    p.academic_level AS program_academic_level
 FROM enrollments e
 INNER JOIN students s
     ON s.student_id = e.student_id
