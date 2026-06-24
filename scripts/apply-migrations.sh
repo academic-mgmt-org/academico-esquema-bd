@@ -54,7 +54,7 @@ for file in $files; do
         echo "[>] Aplicando migración $version ($description) desde el archivo: $filename..."
         
         # Ejecutar la migración
-        if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_DATABASE" -f "$file"; then
+        if PGPASSWORD="$DB_PASSWORD" psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_DATABASE" -f "$file"; then
             # Registrar en el historial de esquema
             PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_DATABASE" -c "
                 INSERT INTO academico.schema_history (version, description, script) 
