@@ -18,37 +18,33 @@ stages:
     variables:
       - group: academico-db-development
     jobs:
-      - deployment: ApplyDevelopmentMigrations
+      - job: ApplyDevelopmentMigrations
         displayName: Apply development migrations
-        environment: development
         pool:
           name: Default
           demands:
             - Agent.Name -equals self-hosted-agent
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                  clean: true
+        steps:
+          - checkout: self
+            clean: true
 
-                - bash: |
-                    set -euo pipefail
+          - bash: |
+              set -euo pipefail
 
-                    if ! command -v psql >/dev/null 2>&1; then
-                      echo "[!] psql no esta instalado en el agente."
-                      exit 1
-                    fi
+              if ! command -v psql >/dev/null 2>&1; then
+                echo "[!] psql no esta instalado en el agente."
+                exit 1
+              fi
 
-                    bash scripts/apply-migrations.sh
-                  displayName: Apply database migrations
-                  env:
-                    DB_HOST: $(DB_HOST)
-                    DB_PORT: $(DB_PORT)
-                    DB_DATABASE: $(DB_DATABASE)
-                    DB_USER: $(DB_USER)
-                    DB_PASSWORD: $(DB_PASSWORD)
-                    PGSSLMODE: require
+              bash scripts/apply-migrations.sh
+            displayName: Apply database migrations
+            env:
+              DB_HOST: $(DB_HOST)
+              DB_PORT: $(DB_PORT)
+              DB_DATABASE: $(DB_DATABASE)
+              DB_USER: $(DB_USER)
+              DB_PASSWORD: $(DB_PASSWORD)
+              PGSSLMODE: require
 
   - stage: ApproveProduction
     displayName: Approve production database deployment
@@ -73,34 +69,30 @@ stages:
     variables:
       - group: academico-db-production
     jobs:
-      - deployment: ApplyProductionMigrations
+      - job: ApplyProductionMigrations
         displayName: Apply production migrations
-        environment: production
         pool:
           name: Default
           demands:
             - Agent.Name -equals self-hosted-agent
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                  clean: true
+        steps:
+          - checkout: self
+            clean: true
 
-                - bash: |
-                    set -euo pipefail
+          - bash: |
+              set -euo pipefail
 
-                    if ! command -v psql >/dev/null 2>&1; then
-                      echo "[!] psql no esta instalado en el agente."
-                      exit 1
-                    fi
+              if ! command -v psql >/dev/null 2>&1; then
+                echo "[!] psql no esta instalado en el agente."
+                exit 1
+              fi
 
-                    bash scripts/apply-migrations.sh
-                  displayName: Apply database migrations
-                  env:
-                    DB_HOST: $(DB_HOST)
-                    DB_PORT: $(DB_PORT)
-                    DB_DATABASE: $(DB_DATABASE)
-                    DB_USER: $(DB_USER)
-                    DB_PASSWORD: $(DB_PASSWORD)
-                    PGSSLMODE: require
+              bash scripts/apply-migrations.sh
+            displayName: Apply database migrations
+            env:
+              DB_HOST: $(DB_HOST)
+              DB_PORT: $(DB_PORT)
+              DB_DATABASE: $(DB_DATABASE)
+              DB_USER: $(DB_USER)
+              DB_PASSWORD: $(DB_PASSWORD)
+              PGSSLMODE: require
