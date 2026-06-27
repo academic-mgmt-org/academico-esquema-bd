@@ -20,8 +20,7 @@ docker compose up -d
   * `V1__init_schema.sql`: Contiene el esquema completo traducido al español, incluyendo tablas base, tipos ENUM, triggers de auditoría, índices y configuraciones iniciales.
 * `scripts/`: Scripts auxiliares de desarrollo y automatización.
   * `apply-migrations.sh`: Script ejecutable encargado de aplicar las migraciones de forma secuencial y llevar el historial.
-* `azure-pipelines-dev.yml`: Pipeline de Azure DevOps para publicar automaticamente el esquema en la base de datos de desarrollo.
-* `azure-pipelines.yml`: Pipeline de Azure DevOps para publicar manualmente el esquema en la base de datos de produccion.
+* `azure-pipelines.yml`: Pipeline de Azure DevOps para publicar automaticamente el esquema en desarrollo y continuar a produccion con aprobacion manual.
 * `.github/workflows/`: Flujo historico de GitHub Actions. No se usa para el despliegue principal en Azure DevOps.
 * `docker-compose.yml`: Archivo de orquestación de Docker para el entorno local.
 
@@ -46,8 +45,11 @@ El esquema (`academico`) está diseñado para modelar los siguientes dominios:
 
 El repositorio esta configurado con **Azure DevOps Pipelines** en el proyecto `academico-estudiantes` para aplicar las migraciones SQL en bases separadas de desarrollo y produccion.
 
-* Desarrollo: `academico-esquema-bd-deploy-dev`, usa `azure-pipelines-dev.yml` y se ejecuta automaticamente con cambios en `main` dentro de `migrations/**`, `scripts/**` o el propio YAML.
-* Produccion: `academico-esquema-bd-deploy-prod`, usa `azure-pipelines.yml` y se ejecuta manualmente (`trigger: none`) para evitar despliegues accidentales.
+El pipeline `academico-esquema-bd-deploy` usa `azure-pipelines.yml` y tiene tres etapas:
+
+* Desarrollo: se ejecuta automaticamente con cambios en `main` dentro de `migrations/**`, `scripts/**` o el propio YAML.
+* Aprobacion de produccion: pausa la ejecucion con una validacion manual.
+* Produccion: aplica las mismas migraciones solo despues de aprobar la etapa anterior.
 
 ### Variables de los Pipelines
 Las credenciales estan configuradas en variable groups de Azure DevOps:

@@ -1,17 +1,80 @@
-name: deploy-db-prod-$(Date:yyyyMMdd)$(Rev:.r)
+name: deploy-db-$(Date:yyyyMMdd)$(Rev:.r)
 
-trigger: none
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - migrations/**
+      - scripts/**
+      - azure-pipelines.yml
+
 pr: none
 
-variables:
-  - group: academico-db-production
-
 stages:
+  - stage: DeployDevelopment
+    displayName: Deploy development database schema
+    variables:
+      - group: academico-db-development
+    jobs:
+      - deployment: ApplyDevelopmentMigrations
+        displayName: Apply development migrations
+        environment: development
+        pool:
+          name: Default
+          demands:
+            - Agent.Name -equals self-hosted-agent
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  clean: true
+
+                - bash: |
+                    set -euo pipefail
+
+                    if ! command -v psql >/dev/null 2>&1; then
+                      echo "[!] psql no esta instalado en el agente."
+                      exit 1
+                    fi
+
+                    bash scripts/apply-migrations.sh
+                  displayName: Apply database migrations
+                  env:
+                    DB_HOST: $(DB_HOST)
+                    DB_PORT: $(DB_PORT)
+                    DB_DATABASE: $(DB_DATABASE)
+                    DB_USER: $(DB_USER)
+                    DB_PASSWORD: $(DB_PASSWORD)
+                    PGSSLMODE: require
+
+  - stage: ApproveProduction
+    displayName: Approve production database deployment
+    dependsOn: DeployDevelopment
+    jobs:
+      - job: WaitForApproval
+        displayName: Wait for manual approval
+        pool: server
+        timeoutInMinutes: 4320
+        steps:
+          - task: ManualValidation@0
+            displayName: Approve production deployment
+            timeoutInMinutes: 1440
+            inputs:
+              notifyUsers: gacalderonr@utn.edu.ec
+              instructions: Revisar que las migraciones aplicadas en desarrollo sean correctas antes de continuar con produccion.
+              onTimeout: reject
+
   - stage: DeployProduction
     displayName: Deploy production database schema
+    dependsOn: ApproveProduction
+    variables:
+      - group: academico-db-production
     jobs:
-      - deployment: ApplyMigrations
-        displayName: Apply migrations
+      - deployment: ApplyProductionMigrations
+        displayName: Apply production migrations
         environment: production
         pool:
           name: Default
