@@ -55,7 +55,7 @@ El pipeline `academico-esquema-bd-deploy` usa `azure-pipelines.yml` y tiene las 
 ### Variables de los Pipelines
 Las credenciales estan configuradas en variable groups de Azure DevOps:
 
-* `academico-db-development`: credenciales para la base `academic_management_dev`.
+* `academico-db-development`: credenciales de desarrollo, sincronizadas desde `/home/azureuser/academico-usuarios/.env`.
 * `academico-db-production`: credenciales para la base `academic_management_prod`.
 * `academico-github-mirror`: token secreto para reflejar `main` en GitHub.
 
