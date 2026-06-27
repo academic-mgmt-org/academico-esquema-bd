@@ -21,7 +21,6 @@ docker compose up -d
 * `scripts/`: Scripts auxiliares de desarrollo y automatización.
   * `apply-migrations.sh`: Script ejecutable encargado de aplicar las migraciones de forma secuencial y llevar el historial.
 * `azure-pipelines.yml`: Pipeline de Azure DevOps para publicar automaticamente el esquema en desarrollo y continuar a produccion con aprobacion manual.
-* `.github/workflows/`: Flujo historico de GitHub Actions. No se usa para el despliegue principal en Azure DevOps.
 * `docker-compose.yml`: Archivo de orquestación de Docker para el entorno local.
 
 ---
