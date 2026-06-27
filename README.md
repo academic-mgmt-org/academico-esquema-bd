@@ -20,7 +20,7 @@ docker compose up -d
   * `V1__init_schema.sql`: Contiene el esquema completo traducido al español, incluyendo tablas base, tipos ENUM, triggers de auditoría, índices y configuraciones iniciales.
 * `scripts/`: Scripts auxiliares de desarrollo y automatización.
   * `apply-migrations.sh`: Script ejecutable encargado de aplicar las migraciones de forma secuencial y llevar el historial.
-* `azure-pipelines.yml`: Pipeline de Azure DevOps para publicar automaticamente el esquema en desarrollo y continuar a produccion con aprobacion manual.
+* `azure-pipelines.yml`: Pipeline de Azure DevOps para publicar automaticamente el esquema en desarrollo, reflejar `main` en GitHub y continuar a produccion con aprobacion manual.
 * `docker-compose.yml`: Archivo de orquestación de Docker para el entorno local.
 
 ---
@@ -44,9 +44,11 @@ El esquema (`academico`) está diseñado para modelar los siguientes dominios:
 
 El repositorio esta configurado con **Azure DevOps Pipelines** en el proyecto `academico-estudiantes` para aplicar las migraciones SQL en bases separadas de desarrollo y produccion.
 
-El pipeline `academico-esquema-bd-deploy` usa `azure-pipelines.yml` y tiene tres etapas:
+El pipeline `academico-esquema-bd-deploy` usa `azure-pipelines.yml` y tiene las siguientes etapas:
 
-* Desarrollo: se ejecuta automaticamente con cambios en `main` dentro de `migrations/**`, `scripts/**` o el propio YAML.
+* Deteccion de cambios: identifica si el commit modifica `migrations/**`, `scripts/**` o el propio YAML.
+* Desarrollo: aplica migraciones automaticamente solo cuando hay cambios relacionados con la base de datos.
+* Espejo GitHub: empuja automaticamente `main` al repositorio `academic-mgmt-org/academico-esquema-bd`.
 * Aprobacion de produccion: pausa la ejecucion con una validacion manual.
 * Produccion: aplica las mismas migraciones solo despues de aprobar la etapa anterior.
 
@@ -55,6 +57,7 @@ Las credenciales estan configuradas en variable groups de Azure DevOps:
 
 * `academico-db-development`: credenciales para la base `academic_management_dev`.
 * `academico-db-production`: credenciales para la base `academic_management_prod`.
+* `academico-github-mirror`: token secreto para reflejar `main` en GitHub.
 
 Cada variable group contiene:
 

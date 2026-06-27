@@ -4,17 +4,48 @@ trigger:
   branches:
     include:
       - main
-  paths:
-    include:
-      - migrations/**
-      - scripts/**
-      - azure-pipelines.yml
 
 pr: none
 
 stages:
+  - stage: DetectChanges
+    displayName: Detect changed files
+    jobs:
+      - job: Detect
+        displayName: Detect database changes
+        pool:
+          name: Default
+          demands:
+            - Agent.Name -equals self-hosted-agent
+        steps:
+          - checkout: self
+            clean: true
+            fetchDepth: 0
+
+          - bash: |
+              set -euo pipefail
+
+              changed_files="$(git diff-tree --no-commit-id --name-only -r HEAD)"
+              echo "$changed_files"
+
+              run_db_deploy=false
+              while IFS= read -r file; do
+                case "$file" in
+                  migrations/*|scripts/*|azure-pipelines.yml)
+                    run_db_deploy=true
+                    ;;
+                esac
+              done <<< "$changed_files"
+
+              echo "##vso[task.setvariable variable=runDbDeploy;isOutput=true]$run_db_deploy"
+              echo "[i] runDbDeploy=$run_db_deploy"
+            name: DetectChangedFiles
+            displayName: Detect database-related changes
+
   - stage: DeployDevelopment
     displayName: Deploy development database schema
+    dependsOn: DetectChanges
+    condition: eq(dependencies.DetectChanges.outputs['Detect.DetectChangedFiles.runDbDeploy'], 'true')
     variables:
       - group: academico-db-development
     jobs:
@@ -46,9 +77,45 @@ stages:
               DB_PASSWORD: $(DB_PASSWORD)
               PGSSLMODE: require
 
+  - stage: MirrorGitHub
+    displayName: Mirror main branch to GitHub
+    dependsOn:
+      - DetectChanges
+      - DeployDevelopment
+    condition: and(eq(dependencies.DetectChanges.result, 'Succeeded'), in(dependencies.DeployDevelopment.result, 'Succeeded', 'Skipped'))
+    variables:
+      - group: academico-github-mirror
+    jobs:
+      - job: PushToGitHub
+        displayName: Push main to GitHub
+        pool:
+          name: Default
+          demands:
+            - Agent.Name -equals self-hosted-agent
+        steps:
+          - checkout: self
+            clean: true
+            fetchDepth: 0
+
+          - bash: |
+              set -euo pipefail
+
+              auth_header="AUTHORIZATION: Basic $(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+              git -c http.https://github.com/.extraheader="$auth_header" \
+                push "https://github.com/${GITHUB_REPOSITORY}.git" \
+                HEAD:refs/heads/main
+            displayName: Push to GitHub mirror
+            env:
+              GITHUB_REPOSITORY: $(GITHUB_REPOSITORY)
+              GITHUB_TOKEN: $(GITHUB_TOKEN)
+
   - stage: ApproveProduction
     displayName: Approve production database deployment
-    dependsOn: DeployDevelopment
+    dependsOn:
+      - DetectChanges
+      - DeployDevelopment
+      - MirrorGitHub
+    condition: and(eq(dependencies.DetectChanges.outputs['Detect.DetectChangedFiles.runDbDeploy'], 'true'), eq(dependencies.DeployDevelopment.result, 'Succeeded'), eq(dependencies.MirrorGitHub.result, 'Succeeded'))
     jobs:
       - job: WaitForApproval
         displayName: Wait for manual approval
@@ -66,6 +133,7 @@ stages:
   - stage: DeployProduction
     displayName: Deploy production database schema
     dependsOn: ApproveProduction
+    condition: succeeded('ApproveProduction')
     variables:
       - group: academico-db-production
     jobs:
