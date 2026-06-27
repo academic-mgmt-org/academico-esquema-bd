@@ -20,8 +20,8 @@ docker compose up -d
   * `V1__init_schema.sql`: Contiene el esquema completo traducido al español, incluyendo tablas base, tipos ENUM, triggers de auditoría, índices y configuraciones iniciales.
 * `scripts/`: Scripts auxiliares de desarrollo y automatización.
   * `apply-migrations.sh`: Script ejecutable encargado de aplicar las migraciones de forma secuencial y llevar el historial.
-* `.github/workflows/`: Flujos de trabajo de automatización de GitHub Actions.
-  * `deploy-schema.yml`: Pipeline de CI/CD para desplegar el esquema de forma continua.
+* `azure-pipelines.yml`: Pipeline de Azure DevOps para publicar el esquema en la base de datos de produccion.
+* `.github/workflows/`: Flujo historico de GitHub Actions. No se usa para el despliegue principal en Azure DevOps.
 * `docker-compose.yml`: Archivo de orquestación de Docker para el entorno local.
 
 ---
@@ -41,19 +41,22 @@ El esquema (`academico`) está diseñado para modelar los siguientes dominios:
 
 ---
 
-## ⚙️ Despliegue Automático en Azure (Flujo GitOps)
+## ⚙️ Despliegue en Azure DevOps
 
-El repositorio está configurado con **GitHub Actions** para aplicar automáticamente las nuevas migraciones en el servidor de base de datos de Azure tras realizar un `git push` a la rama `main`.
+El repositorio esta configurado con **Azure DevOps Pipelines** en el proyecto `academico-estudiantes` para aplicar las migraciones SQL en la base de datos de produccion.
 
-### Secretos del Repositorio (GitHub Secrets)
-Para que el despliegue funcione, las siguientes credenciales seguras de Azure están configuradas en los ajustes del repositorio en GitHub:
+El pipeline se llama `academico-esquema-bd-deploy-prod` y usa el archivo `azure-pipelines.yml`. La ejecucion de produccion es manual (`trigger: none`) para evitar despliegues accidentales.
+
+### Variables del Pipeline
+Para que el despliegue funcione, las credenciales estan configuradas en el variable group de Azure DevOps `academico-db-production`:
+
 * `DB_HOST`: Host de la base de datos de Azure.
 * `DB_PORT`: Puerto de conexión (por defecto `5432`).
-* `DB_DATABASE`: Nombre de la base de datos objetivo (`petclinic_dev`).
+* `DB_DATABASE`: Nombre de la base de datos objetivo.
 * `DB_USER`: Usuario administrador de la base de datos.
-* `DB_PASSWORD`: Contraseña del usuario administrador.
+* `DB_PASSWORD`: Contraseña del usuario administrador, configurada como variable secreta.
 
-El pipeline lee estos secretos de forma segura en tiempo de ejecución, instala el cliente de PostgreSQL y ejecuta el script de migración.
+El pipeline lee estas variables de forma segura en tiempo de ejecucion y ejecuta `scripts/apply-migrations.sh` desde el agente `self-hosted-agent` del pool `Default`.
 
 ---
 
@@ -90,7 +93,7 @@ Supongamos que deseas añadir una nueva columna llamada `observacion` a la tabla
    git push origin main
    ```
 
-4. **Despliegue Automático:**
-   * Al recibir los cambios, GitHub Actions activará el flujo **Deploy Database Schema**.
-   * El runner comparará las migraciones existentes contra la tabla `academico.schema_history` en Azure.
-   * Al notar que `V2` no ha sido ejecutado, aplicará únicamente el script `V2__agregar_observacion_estudiante.sql` y registrará el éxito de la migración en el historial.
+4. **Despliegue en Azure DevOps:**
+   * Ejecuta manualmente el pipeline **academico-esquema-bd-deploy-prod** desde Azure DevOps.
+   * El agente comparara las migraciones existentes contra la tabla `academico.schema_history` en Azure.
+   * Al notar que `V2` no ha sido ejecutado, aplicara unicamente el script `V2__agregar_observacion_estudiante.sql` y registrara el exito de la migracion en el historial.
