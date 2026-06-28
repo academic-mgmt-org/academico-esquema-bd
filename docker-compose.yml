@@ -1,20 +1,30 @@
-version: '3.8'
-
 services:
   db:
-    image: postgres:15-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres-ssl
+    image: academico-postgres-ssl:15-alpine
     container_name: academic-postgres-db
     restart: always
     environment:
       POSTGRES_DB: academic_management_db
       POSTGRES_USER: academic_user
       POSTGRES_PASSWORD: academic_password
+      POSTGRES_SSL_CN: localhost
     ports:
       - "5432:5432"
     volumes:
       # Monta la migración inicial en el directorio de entrada de Postgres
       - ./migrations/V1__init_schema.sql:/docker-entrypoint-initdb.d/10-init_schema.sql
       - postgres_data:/var/lib/postgresql/data
+    command:
+      - postgres
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/var/lib/postgresql/ssl/server.crt
+      - -c
+      - ssl_key_file=/var/lib/postgresql/ssl/server.key
 
 volumes:
   postgres_data:

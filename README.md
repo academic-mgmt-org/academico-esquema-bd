@@ -12,6 +12,19 @@ Para levantar la base de datos localmente con todo el esquema e información ini
 docker compose up -d
 ```
 
+El `docker-compose.yml` local construye una imagen derivada de `postgres:15-alpine` que genera un certificado autofirmado dentro del contenedor y arranca PostgreSQL con `ssl=on`. Para verificarlo:
+
+```bash
+docker exec -it academic-postgres-db \
+  psql -U academic_user -d academic_management_db -c "SHOW ssl;"
+```
+
+La conexión local con SSL puede probarse con:
+
+```bash
+psql "host=localhost port=5432 dbname=academic_management_db user=academic_user password=academic_password sslmode=require"
+```
+
 ---
 
 ## 📁 Estructura del Repositorio
