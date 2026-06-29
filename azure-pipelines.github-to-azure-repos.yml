@@ -32,9 +32,9 @@ stages:
                 exit 1
               fi
 
-              azure_repos_url="https://dev.azure.com/fabrica-utn/academico-estudiantes/_git/academico-esquema-bd"
+              azure_repos_url="https://fabrica-utn@dev.azure.com/fabrica-utn/academico-estudiantes/_git/academico-esquema-bd"
 
-              git -c http.https://dev.azure.com/.extraheader="AUTHORIZATION: bearer ${SYSTEM_ACCESSTOKEN}" \
+              git -c http.extraheader="AUTHORIZATION: bearer ${SYSTEM_ACCESSTOKEN}" \
                 push "$azure_repos_url" HEAD:refs/heads/main
             displayName: Push GitHub commit to Azure Repos
             env:
