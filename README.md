@@ -34,6 +34,7 @@ psql "host=localhost port=5432 dbname=academic_management_db user=academic_user 
 * `scripts/`: Scripts auxiliares de desarrollo y automatización.
   * `apply-migrations.sh`: Script ejecutable encargado de aplicar las migraciones de forma secuencial y llevar el historial.
 * `azure-pipelines.yml`: Pipeline de Azure DevOps para publicar automaticamente el esquema en desarrollo, reflejar `main` en GitHub y continuar a produccion con aprobacion manual.
+* `azure-pipelines.github-to-azure-repos.yml`: Pipeline de Azure DevOps conectado a GitHub para reflejar `main` hacia Azure Repos.
 * `docker-compose.yml`: Archivo de orquestación de Docker para el entorno local.
 
 ---
@@ -65,13 +66,18 @@ El pipeline `academico-esquema-bd-deploy` usa `azure-pipelines.yml` y tiene las 
 * Aprobacion de produccion: pausa la ejecucion con una validacion manual.
 * Produccion: aplica las mismas migraciones solo despues de aprobar la etapa anterior.
 
+Para trabajar desde GitHub sin GitHub Actions, crear tambien un pipeline de Azure DevOps usando `azure-pipelines.github-to-azure-repos.yml` como YAML y `academic-mgmt-org/academico-esquema-bd` como repositorio origen. El flujo queda:
+
+1. Hacer push a `main` en GitHub.
+2. Azure Pipelines detecta el push en GitHub y refleja el commit a Azure Repos.
+3. Azure DevOps detecta el push en Azure Repos y ejecuta el pipeline de despliegue.
+
 ### Variables de los Pipelines
 Las credenciales estan configuradas en variable groups de Azure DevOps:
 
 * `academico-db-development`: credenciales de desarrollo, sincronizadas desde `/home/azureuser/academico-usuarios/.env`.
 * `academico-db-production`: credenciales para la base `academic_management_prod`.
 * `academico-github-mirror`: token secreto para reflejar `main` en GitHub.
-
 Cada variable group contiene:
 
 * `DB_HOST`: Host de la base de datos de Azure.
@@ -81,6 +87,16 @@ Cada variable group contiene:
 * `DB_PASSWORD`: Contraseña del usuario, configurada como variable secreta.
 
 Los pipelines leen estas variables de forma segura en tiempo de ejecucion y ejecutan `scripts/apply-migrations.sh` desde el agente `self-hosted-agent` del pool `Default`.
+
+### Permisos para espejo GitHub a Azure Repos
+
+El pipeline `azure-pipelines.github-to-azure-repos.yml` usa `$(System.AccessToken)` para escribir en Azure Repos. El Build Service del proyecto debe tener permiso `Contribute` sobre:
+
+```text
+https://dev.azure.com/fabrica-utn/academico-estudiantes/_git/academico-esquema-bd
+```
+
+No requiere GitHub Actions ni secretos en GitHub.
 
 ---
 
@@ -109,7 +125,7 @@ Supongamos que deseas añadir una nueva columna llamada `observacion` a la tabla
 2. **Probar localmente (Opcional):**
    Puedes aplicar el cambio en tu base de datos local de desarrollo para pruebas.
 
-3. **Subir los cambios a Azure Repos:**
+3. **Subir los cambios a GitHub:**
    Agrega el archivo al commit y haz push:
    ```bash
    git add migrations/V2__agregar_observacion_estudiante.sql
@@ -118,7 +134,8 @@ Supongamos que deseas añadir una nueva columna llamada `observacion` a la tabla
    ```
 
 4. **Despliegue en Azure DevOps:**
-   * Al hacer push a `main`, el pipeline **academico-esquema-bd-deploy-dev** aplicara automaticamente la migracion en desarrollo.
-   * Para produccion, ejecuta manualmente el pipeline **academico-esquema-bd-deploy-prod** desde Azure DevOps.
+   * Al hacer push a `main` en GitHub, Azure Pipelines reflejara el commit a Azure Repos.
+   * El push recibido en Azure Repos disparara el pipeline **academico-esquema-bd-deploy**.
+   * Para produccion, aprueba manualmente la etapa de produccion en Azure DevOps.
    * El agente comparara las migraciones existentes contra la tabla `academico.schema_history` en Azure.
    * Al notar que `V2` no ha sido ejecutado, aplicara unicamente el script `V2__agregar_observacion_estudiante.sql` y registrara el exito de la migracion en el historial.

@@ -31,7 +31,7 @@ stages:
               run_db_deploy=false
               while IFS= read -r file; do
                 case "$file" in
-                  migrations/*|scripts/*|azure-pipelines.yml)
+                  migrations/*|scripts/*|azure-pipelines*.yml)
                     run_db_deploy=true
                     ;;
                 esac
