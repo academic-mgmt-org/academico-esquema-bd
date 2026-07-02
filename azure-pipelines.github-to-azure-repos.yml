@@ -7,13 +7,6 @@ trigger:
 
 pr: none
 
-resources:
-  repositories:
-    - repository: azureReposMirror
-      type: git
-      name: academico-esquema-bd
-      ref: refs/heads/main
-
 stages:
   - stage: MirrorToAzureRepos
     displayName: Mirror GitHub main to Azure Repos
@@ -31,12 +24,6 @@ stages:
             path: github-source
             persistCredentials: false
 
-          - checkout: azureReposMirror
-            clean: true
-            fetchDepth: 1
-            path: azure-repos-mirror
-            persistCredentials: true
-
           - bash: |
               set -euo pipefail
 
@@ -47,8 +34,7 @@ stages:
               fi
 
               github_source_dir="$(Pipeline.Workspace)/github-source"
-              azure_repos_dir="$(Pipeline.Workspace)/azure-repos-mirror"
-              azure_repos_url="$(git -C "$azure_repos_dir" remote get-url origin)"
+              azure_repos_url="https://dev.azure.com/fabrica-utn/academico-estudiantes/_git/academico-esquema-bd"
 
               cd "$github_source_dir"
               git -c http.extraheader="AUTHORIZATION: bearer ${SYSTEM_ACCESSTOKEN}" \
