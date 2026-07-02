@@ -7,8 +7,8 @@
 -- con prefijo, formato soportado por el microservicio de login.
 --
 -- Credenciales:
---   estudiante@utn.edu.ec / password123
---   docente@utn.edu.ec    / password123
+--   allunav@utn.edu.ec / password123
+--   docente@utn.edu.ec / password123
 
 BEGIN;
 
@@ -38,7 +38,7 @@ WITH seed_users (
             'estudiante',
             'Estudiante',
             'Prueba',
-            'estudiante@utn.edu.ec',
+            'allunav@utn.edu.ec',
             'sha256:ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f',
             '1000000001',
             'activo'
@@ -101,7 +101,7 @@ BEGIN
     SELECT COUNT(*)
     INTO seeded_users_count
     FROM usuarios
-    WHERE email IN ('estudiante@utn.edu.ec', 'docente@utn.edu.ec')
+    WHERE email IN ('allunav@utn.edu.ec', 'docente@utn.edu.ec')
       AND estado = 'activo';
 
     IF seeded_users_count <> 2 THEN
