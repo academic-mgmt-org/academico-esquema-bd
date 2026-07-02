@@ -8,8 +8,8 @@
 --
 -- Datos principales del flujo:
 -- - Matricula: 1
--- - Estudiante: Maria Fernanda Castro Imbaquingo (id 1)
--- - Docente: Ing. Andrea Morales (id 2)
+-- - Estudiante: Maria Fernanda Castro Imbaquingo (id 101)
+-- - Docente: Ing. Andrea Morales (id 102)
 -- - Materia: SOF-101 - Programación Orientada a Objetos I
 -- - Ciclo academico: 2026A
 -- - Paralelo: A
@@ -79,24 +79,26 @@ SET
     facultad_id = EXCLUDED.facultad_id,
     actualizado_en = CURRENT_TIMESTAMP;
 
+-- Los usuarios del flujo de calificaciones usan ids reservados para no pisar
+-- las semillas de login de V7, que en bases nuevas suelen ocupar ids 1 y 2.
 UPDATE usuarios
 SET email = CONCAT('usuario-', id, '-anterior@utn.edu.ec')
-WHERE id <> 1
+WHERE id <> 101
   AND email = 'maria.fernanda.castro.flujo@utn.edu.ec';
 
 UPDATE usuarios
 SET identificacion = CONCAT('ANT-', id, '-1')
-WHERE id <> 1
+WHERE id <> 101
   AND identificacion = '1';
 
 UPDATE usuarios
 SET email = CONCAT('usuario-', id, '-anterior@utn.edu.ec')
-WHERE id <> 2
+WHERE id <> 102
   AND email = 'andrea.morales.flujo@utn.edu.ec';
 
 UPDATE usuarios
 SET identificacion = CONCAT('ANT-', id, '-2')
-WHERE id <> 2
+WHERE id <> 102
   AND identificacion = '2';
 
 INSERT INTO usuarios (
@@ -112,7 +114,7 @@ INSERT INTO usuarios (
 )
 OVERRIDING SYSTEM VALUE
 SELECT
-    1,
+    101,
     roles.id,
     'Maria Fernanda',
     'Castro Imbaquingo',
@@ -150,7 +152,7 @@ INSERT INTO usuarios (
 )
 OVERRIDING SYSTEM VALUE
 SELECT
-    2,
+    102,
     roles.id,
     'Andrea',
     'Morales',
@@ -264,7 +266,7 @@ SELECT
     1,
     cursos.id,
     1,
-    2,
+    102,
     'A',
     30,
     '{"lunes": "08:00-10:00", "miercoles": "08:00-10:00"}'::jsonb,
@@ -302,7 +304,7 @@ INSERT INTO matriculas (
 OVERRIDING SYSTEM VALUE
 VALUES (
     1,
-    1,
+    101,
     1,
     TIMESTAMP '2026-07-02 00:00:00',
     'matriculado',
@@ -405,7 +407,7 @@ INSERT INTO matricula_asignaturas (
 VALUES (
     '1:2026A:SOF-101:A:2',
     '1',
-    1,
+    101,
     '1',
     1,
     '2026A',
@@ -433,9 +435,12 @@ UPDATE calificaciones
 SET
     matricula_codigo = '1',
     matricula_asignatura_codigo = '1:2026A:SOF-101:A:2',
-    estudiante_id = 1,
+    estudiante_id = 101,
     oferta_curso_id = 1,
-    registrada_por = COALESCE(registrada_por, 2)
+    registrada_por = CASE
+        WHEN registrada_por IS NULL OR registrada_por = 2 THEN 102
+        ELSE registrada_por
+    END
 WHERE matricula_codigo = '1'
    OR matricula_asignatura_codigo LIKE '1:%';
 
