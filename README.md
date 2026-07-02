@@ -33,7 +33,7 @@ psql "host=localhost port=5432 dbname=academic_management_db user=academic_user 
   * `V1__init_schema.sql`: Contiene el esquema completo traducido al español, incluyendo tablas base, tipos ENUM, triggers de auditoría, índices y configuraciones iniciales.
 * `scripts/`: Scripts auxiliares de desarrollo y automatización.
   * `apply-migrations.sh`: Script ejecutable encargado de aplicar las migraciones de forma secuencial y llevar el historial.
-* `azure-pipelines.yml`: Pipeline de Azure DevOps para publicar automáticamente el esquema en desarrollo y continuar a producción con aprobación manual.
+* `azure-pipelines.yml`: Pipeline único de Azure DevOps para sincronizar GitHub hacia Azure Repos, publicar automáticamente el esquema en desarrollo y continuar a producción con aprobación manual.
 * `docker-compose.yml`: Archivo de orquestación de Docker para el entorno local.
 
 ---
@@ -59,18 +59,13 @@ El repositorio está configurado con **Azure DevOps Pipelines** en el proyecto `
 
 El pipeline `academico-esquema-bd-deploy` usa `azure-pipelines.yml` y tiene las siguientes etapas:
 
+* Espejo GitHub -> Azure Repos: sincroniza `main` en Azure Repos desde el commit recibido en GitHub.
 * Detección de cambios: identifica si el commit modifica `migrations/**`, `scripts/**` o el propio YAML.
 * Desarrollo: aplica migraciones automáticamente solo cuando hay cambios relacionados con la base de datos.
 * Aprobación de producción: pausa la ejecución con una validación manual.
 * Producción: aplica las mismas migraciones solo después de aprobar la etapa anterior.
 
-El pipeline está configurado para ejecutarse directamente al hacer push a la rama `main` en GitHub.
-
-El pipeline `academico-esquema-bd-github-to-azure-repos` usa
-`azure-pipelines.github-to-azure-repos.yml` y mantiene sincronizada la rama
-`main` de Azure Repos desde GitHub. Con este flujo, GitHub es la fuente de
-publicación y Azure Repos queda como espejo operativo para el proyecto de Azure
-DevOps.
+El pipeline está configurado para ejecutarse directamente al hacer push a la rama `main` en GitHub. GitHub es la fuente de publicación y Azure Repos queda como espejo operativo para el proyecto de Azure DevOps sin crear una segunda definición de pipeline.
 
 ### Variables del Pipeline
 Las credenciales están configuradas en variable groups de Azure DevOps:
@@ -125,6 +120,7 @@ Supongamos que deseas añadir una nueva columna llamada `observacion` a la tabla
 
 4. **Despliegue en Azure DevOps:**
    * Al hacer push a `main` en GitHub, se disparará directamente el pipeline **academico-esquema-bd-deploy**.
+   * El mismo pipeline actualizará primero la rama `main` en Azure Repos como espejo de GitHub.
    * Para producción, aprueba manualmente la etapa de producción en Azure DevOps.
    * El agente comparará las migraciones existentes contra la tabla `academico.schema_history` en Azure.
    * Al notar que `V2` no ha sido ejecutado, aplicará únicamente el script `V2__agregar_observacion_estudiante.sql` y registrará el éxito de la migración en el historial.
