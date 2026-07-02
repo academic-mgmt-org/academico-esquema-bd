@@ -77,45 +77,12 @@ stages:
               DB_PASSWORD: $(DB_PASSWORD)
               PGSSLMODE: require
 
-  - stage: MirrorGitHub
-    displayName: Mirror main branch to GitHub
-    dependsOn:
-      - DetectChanges
-      - DeployDevelopment
-    condition: and(eq(dependencies.DetectChanges.result, 'Succeeded'), in(dependencies.DeployDevelopment.result, 'Succeeded', 'Skipped'))
-    variables:
-      - group: academico-github-mirror
-    jobs:
-      - job: PushToGitHub
-        displayName: Push main to GitHub
-        pool:
-          name: Default
-          demands:
-            - Agent.Name -equals self-hosted-agent
-        steps:
-          - checkout: self
-            clean: true
-            fetchDepth: 0
-
-          - bash: |
-              set -euo pipefail
-
-              auth_header="AUTHORIZATION: Basic $(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
-              git -c http.https://github.com/.extraheader="$auth_header" \
-                push "https://github.com/${GITHUB_REPOSITORY}.git" \
-                HEAD:refs/heads/main
-            displayName: Push to GitHub mirror
-            env:
-              GITHUB_REPOSITORY: $(GITHUB_REPOSITORY)
-              GITHUB_TOKEN: $(GITHUB_TOKEN)
-
   - stage: ApproveProduction
     displayName: Approve production database deployment
     dependsOn:
       - DetectChanges
       - DeployDevelopment
-      - MirrorGitHub
-    condition: and(eq(dependencies.DetectChanges.outputs['Detect.DetectChangedFiles.runDbDeploy'], 'true'), eq(dependencies.DeployDevelopment.result, 'Succeeded'), eq(dependencies.MirrorGitHub.result, 'Succeeded'))
+    condition: and(eq(dependencies.DetectChanges.outputs['Detect.DetectChangedFiles.runDbDeploy'], 'true'), eq(dependencies.DeployDevelopment.result, 'Succeeded'))
     jobs:
       - job: WaitForApproval
         displayName: Wait for manual approval
