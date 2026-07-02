@@ -66,6 +66,12 @@ El pipeline `academico-esquema-bd-deploy` usa `azure-pipelines.yml` y tiene las 
 
 El pipeline está configurado para ejecutarse directamente al hacer push a la rama `main` en GitHub.
 
+El pipeline `academico-esquema-bd-github-to-azure-repos` usa
+`azure-pipelines.github-to-azure-repos.yml` y mantiene sincronizada la rama
+`main` de Azure Repos desde GitHub. Con este flujo, GitHub es la fuente de
+publicación y Azure Repos queda como espejo operativo para el proyecto de Azure
+DevOps.
+
 ### Variables del Pipeline
 Las credenciales están configuradas en variable groups de Azure DevOps:
 
