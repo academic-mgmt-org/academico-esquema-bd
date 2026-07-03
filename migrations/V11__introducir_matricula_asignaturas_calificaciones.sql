@@ -22,13 +22,13 @@ CREATE TABLE IF NOT EXISTS matricula_asignaturas (
     docente_cedula VARCHAR(80),
     nivel_codigo VARCHAR(40),
     depen_codigo VARCHAR(40),
-    estado VARCHAR(20) NOT NULL DEFAULT 'activa',
+    estado VARCHAR(20) NOT NULL DEFAULT 'activo',
     nota_final NUMERIC(5,2),
     creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     actualizado_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT chk_matricula_asignaturas_estado
-        CHECK (estado IN ('activa', 'aprobada', 'reprobada', 'anulada')),
+        CHECK (estado IN ('activo', 'aprobado', 'reprobado', 'anulado')),
     CONSTRAINT chk_matricula_asignaturas_nota_final
         CHECK (nota_final IS NULL OR (nota_final >= 0 AND nota_final <= 10))
 );
@@ -83,10 +83,10 @@ WITH base AS (
         COALESCE(NULLIF(oferta.paralelo, ''), 'SIN-PARALELO') AS paralelo_codigo,
         COALESCE(NULLIF(docente.identificacion, ''), oferta.docente_id::text) AS docente_cedula,
         CASE
-            WHEN matricula.estado = 'aprobado' THEN 'aprobada'
-            WHEN matricula.estado = 'reprobado' THEN 'reprobada'
-            WHEN matricula.estado IN ('retirado', 'anulado') THEN 'anulada'
-            ELSE 'activa'
+            WHEN matricula.estado = 'aprobado' THEN 'aprobado'
+            WHEN matricula.estado = 'reprobado' THEN 'reprobado'
+            WHEN matricula.estado IN ('retirado', 'anulado') THEN 'anulado'
+            ELSE 'activo'
         END AS estado,
         matricula.nota_final
     FROM calificaciones AS calificacion
@@ -218,7 +218,9 @@ ALTER TABLE calificaciones
     DROP CONSTRAINT IF EXISTS fk_calificaciones_matricula;
 
 DROP INDEX IF EXISTS academico.uq_calificaciones_matricula_componente_activa;
+DROP INDEX IF EXISTS academico.uq_calificaciones_matricula_componente_vigente;
 DROP INDEX IF EXISTS academico.uq_calificaciones_matricula_codigo_componente_activa;
+DROP INDEX IF EXISTS academico.uq_calificaciones_matricula_codigo_componente_vigente;
 DROP INDEX IF EXISTS academico.idx_calificaciones_matricula;
 DROP INDEX IF EXISTS academico.idx_calificaciones_matricula_id;
 
@@ -233,11 +235,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_matricula_asignaturas_contexto
         paralelo_codigo,
         (COALESCE(docente_cedula, ''))
     )
-    WHERE estado <> 'anulada';
+    WHERE estado <> 'anulado';
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_calificaciones_matricula_asignatura_componente_activa
+CREATE UNIQUE INDEX IF NOT EXISTS uq_calificaciones_matricula_asignatura_componente_vigente
     ON calificaciones (matricula_asignatura_codigo, componente_id)
-    WHERE estado <> 'anulada';
+    WHERE estado <> 'anulado';
 
 CREATE INDEX IF NOT EXISTS idx_matricula_asignaturas_matricula
     ON matricula_asignaturas(matricula_codigo);

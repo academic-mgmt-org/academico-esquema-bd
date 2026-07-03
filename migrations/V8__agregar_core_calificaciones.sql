@@ -38,7 +38,7 @@ ALTER TABLE calificaciones
     ADD COLUMN IF NOT EXISTS oferta_curso_id BIGINT,
     ADD COLUMN IF NOT EXISTS componente_id BIGINT,
     ADD COLUMN IF NOT EXISTS estado VARCHAR(20),
-    ADD COLUMN IF NOT EXISTS publicada BOOLEAN,
+    ADD COLUMN IF NOT EXISTS publicado BOOLEAN,
     ADD COLUMN IF NOT EXISTS registrada_por BIGINT;
 
 ALTER TABLE calificaciones
@@ -103,21 +103,21 @@ SET estado = 'borrador'
 WHERE estado IS NULL;
 
 UPDATE calificaciones
-SET publicada = FALSE
-WHERE publicada IS NULL;
+SET publicado = FALSE
+WHERE publicado IS NULL;
 
 ALTER TABLE calificaciones
     ALTER COLUMN estado SET DEFAULT 'borrador',
     ALTER COLUMN estado SET NOT NULL,
-    ALTER COLUMN publicada SET DEFAULT FALSE,
-    ALTER COLUMN publicada SET NOT NULL,
+    ALTER COLUMN publicado SET DEFAULT FALSE,
+    ALTER COLUMN publicado SET NOT NULL,
     ALTER COLUMN componente_id SET NOT NULL;
 
 ALTER TABLE calificaciones
     DROP CONSTRAINT IF EXISTS chk_calificaciones_estado;
 ALTER TABLE calificaciones
     ADD CONSTRAINT chk_calificaciones_estado
-    CHECK (estado IN ('borrador', 'publicada', 'anulada'));
+    CHECK (estado IN ('borrador', 'publicado', 'anulado'));
 
 DO $$
 BEGIN
@@ -144,9 +144,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_componentes_calificacion_contexto_nombre
         LOWER(nombre)
     );
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_calificaciones_matricula_componente_activa
+CREATE UNIQUE INDEX IF NOT EXISTS uq_calificaciones_matricula_componente_vigente
     ON calificaciones (matricula_id, componente_id)
-    WHERE estado <> 'anulada';
+    WHERE estado <> 'anulado';
 
 CREATE INDEX IF NOT EXISTS idx_componentes_calificacion_oferta
     ON componentes_calificacion(oferta_curso_id);
@@ -158,5 +158,5 @@ CREATE INDEX IF NOT EXISTS idx_calificaciones_estudiante
     ON calificaciones(estudiante_id);
 CREATE INDEX IF NOT EXISTS idx_calificaciones_oferta
     ON calificaciones(oferta_curso_id);
-CREATE INDEX IF NOT EXISTS idx_calificaciones_publicada
-    ON calificaciones(publicada);
+CREATE INDEX IF NOT EXISTS idx_calificaciones_publicado
+    ON calificaciones(publicado);

@@ -414,7 +414,7 @@ VALUES (
     'SOF-101',
     'A',
     '2',
-    'activa',
+    'activo',
     NULL
 )
 ON CONFLICT (codigo) DO UPDATE
@@ -477,15 +477,15 @@ WITH resumen AS (
         ) AS nota_final
     FROM calificaciones
     WHERE matricula_asignatura_codigo = '1:2026A:SOF-101:A:2'
-      AND estado <> 'anulada'
+      AND estado <> 'anulado'
     GROUP BY matricula_asignatura_codigo
 )
 UPDATE matricula_asignaturas
 SET
     nota_final = resumen.nota_final,
     estado = CASE
-        WHEN resumen.nota_final >= 7 THEN 'aprobada'
-        ELSE 'reprobada'
+        WHEN resumen.nota_final >= 7 THEN 'aprobado'
+        ELSE 'reprobado'
     END,
     actualizado_en = NOW()
 FROM resumen
